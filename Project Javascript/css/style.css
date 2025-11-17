@@ -1,0 +1,23 @@
+/* Kita buat class kustom baru, misal .carousel-fixed-height */
+
+/* 1. Atur tinggi carousel-item */
+.carousel-fixed-height .carousel-item {
+  height: 400px; /* <-- UBAH TINGGI CAROUSEL ANDA DI SINI */
+  
+  /* Ini opsional, tapi bagus untuk transisi yang mulus */
+  transition: transform 0.6s ease-in-out;
+}
+
+/* 2. Buat gambar beradaptasi (ini bagian pentingnya) */
+.carousel-fixed-height .carousel-item img {
+  /* Paksa gambar untuk mengisi 100% tinggi dari item (500px) */
+  height: 100%;
+  
+  /* Ini properti ajaibnya:
+    - 'cover' = Menutupi seluruh area, pertahankan rasio aspek, 
+                dan potong (crop) sisa gambar.
+    - 'center' = Memastikan pemotongan berfokus di tengah gambar.
+  */
+  object-fit: cover;
+  object-position: center;
+}

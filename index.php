@@ -137,86 +137,57 @@
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+      <?php
+      // 1. PANGGIL KONEKSI (Jika di paling atas file belum ada)
+      include_once 'koneksi.php'; 
 
-      <div class="col">
-        <div class="card h-100 border-0 shadow-sm">
+      // 2. BUAT QUERY: Ambil 4 dokter saja untuk halaman beranda
+      $query_home = "SELECT * FROM users WHERE role = 'konselor' AND status = 'active' LIMIT 4";
+      $result_home = mysqli_query($conn, $query_home);
+
+      // 3. CEK APAKAH ADA DATA
+      if (mysqli_num_rows($result_home) > 0) {
           
-          <img src="img/dokter1.jpg" class="card-img-top img-konselor" alt="Dr. Andi" 
-              style="cursor: pointer;" 
-              data-bs-toggle="modal" 
-              data-bs-target="#detailAndi">
-          
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-bold">Dr. Andi Pratama</h5>
-            <p class="card-text text-muted small mb-4">Psikolog Klinis & Trauma</p>
-            <div class="mt-auto d-grid">
-              <button type="button" class="btn btn-primary w-100" 
-                data-bs-toggle="modal" 
-                data-bs-target="#modalJadwal"
-                data-nama="<?php echo $row['nama']; ?>"
-                data-spesialis="<?php echo !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum'; ?>"
-                data-id="<?php echo $row['user_id']; ?>">
-                Mulai Konseling
-              </button>
+          // 4. MULAI LOOPING (Agar $row terisi data)
+          while ($row = mysqli_fetch_assoc($result_home)) {
+              // Handle jika spesialisasi kosong
+              $spesialis = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
+              // Handle gambar (Disini saya set default/random dummy)
+              $gambar = "img/dokter1.jpg"; 
+      ?>
+
+          <div class="col">
+            <div class="card h-100 border-0 shadow-sm">
+              <img src="<?php echo $gambar; ?>" class="card-img-top img-konselor" alt="<?php echo $row['nama']; ?>" 
+                  style="cursor: pointer; height: 250px; object-fit: cover;">
+              
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title fw-bold"><?php echo $row['nama']; ?></h5>
+                <p class="card-text text-muted small mb-4"><?php echo $spesialis; ?></p>
+                
+                <div class="mt-auto d-grid">
+                  <button type="button" class="btn btn-primary w-100" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalJadwal"
+                    data-nama="<?php echo $row['nama']; ?>"
+                    data-spesialis="<?php echo $spesialis; ?>"
+                    data-id="<?php echo $row['user_id']; ?>">
+                    Mulai Konseling
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="col">
-        <div class="card h-100 border-0 shadow-sm">
-          
-          <img src="img/dokter2.jpg" class="card-img-top img-konselor" alt="Siti Rahma" 
-              style="cursor: pointer;" 
-              data-bs-toggle="modal" 
-              data-bs-target="#detailSiti">
+      <?php 
+          } // 5. TUTUP KURUNG KURAWAL WHILE (Penting!)
+      } else {
+          echo "<p class='text-center w-100'>Belum ada data konselor.</p>";
+      }
+      ?>
 
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-bold">Siti Rahma, M.Psi.</h5>
-            <p class="card-text text-muted small mb-4">Konselor Pernikahan</p>
-            <div class="mt-auto d-grid">
-              <a href="#" class="btn btn-primary">Mulai Konseling</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="card h-100 border-0 shadow-sm">
-          
-          <img src="img/dokter3.jpg" class="card-img-top img-konselor" alt="Dr. Andi" 
-              style="cursor: pointer;" 
-              data-bs-toggle="modal" 
-              data-bs-target="#detailAndi">
-          
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-bold">Dr. Andi Pratama</h5>
-            <p class="card-text text-muted small mb-4">Psikolog Klinis & Trauma</p>
-            <div class="mt-auto d-grid">
-              <a href="#" class="btn btn-primary">Mulai Konseling</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="card h-100 border-0 shadow-sm">
-          
-          <img src="img/dokter4.jpg" class="card-img-top img-konselor" alt="Dr. Andi" 
-              style="cursor: pointer;" 
-              data-bs-toggle="modal" 
-              data-bs-target="#detailAndi">
-          
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-bold">Dr. Andi Pratama</h5>
-            <p class="card-text text-muted small mb-4">Psikolog Klinis & Trauma</p>
-            <div class="mt-auto d-grid">
-              <a href="#" class="btn btn-primary">Mulai Konseling</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div> <div class="row mt-5">
+    </div>
+    <div class="row mt-5">
       <div class="col text-center">
         <p class="mb-3 text-muted">Belum menemukan spesialis yang cocok?</p>
         <a href="konselor.php" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
@@ -225,7 +196,7 @@
       </div>
     </div>
 
-  </div> </section>
+    </div> </section>
 
   </div>
 </section>
@@ -242,7 +213,7 @@
         </p>
       </div>
       <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="#" class="btn btn-outline-dark rounded-pill px-4">Lihat Semua Artikel <i class="bi bi-arrow-right ms-2"></i></a>
+        <a href="artikel.php" class="btn btn-outline-dark rounded-pill px-4">Lihat Semua Artikel <i class="bi bi-arrow-right ms-2"></i></a>
       </div>
     </div>
 
@@ -263,7 +234,7 @@
               <span>Oleh Dr. Andi</span>
             </div>
             <h5 class="card-title fw-bold mb-3">
-              <a href="#" class="text-dark text-decoration-none stretched-link">Cara Mengelola Serangan Panik di Tempat Umum</a>
+              <a href="detail_artikel.php?id=1" class="text-dark text-decoration-none stretched-link">Cara Mengelola Serangan Panik di Tempat Umum</a>
             </h5>
             <p class="card-text text-muted">
               Pelajari teknik pernapasan 4-7-8 dan langkah praktis untuk menenangkan diri saat kecemasan melanda secara tiba-tiba.
@@ -293,7 +264,7 @@
               <span>Mindfulness</span>
             </div>
             <h5 class="card-title fw-bold mb-3">
-              <a href="#" class="text-dark text-decoration-none stretched-link">Meditasi Pagi untuk Ketenangan Jiwa</a>
+              <a href="detail_artikel.php?id=2" class="text-dark text-decoration-none stretched-link">Meditasi Pagi untuk Ketenangan Jiwa</a>
             </h5>
             <p class="card-text text-muted">
               Panduan visual meditasi ringan yang bisa Anda lakukan setiap pagi sebelum memulai aktivitas.
@@ -320,7 +291,7 @@
               <span>Inspirasi</span>
             </div>
             <h5 class="card-title fw-bold mb-3">
-              <a href="#" class="text-dark text-decoration-none stretched-link">"Aku Berdamai dengan Luka Masa Lalu"</a>
+              <a href="detail_artikel.php?id=3" class="text-dark text-decoration-none stretched-link">"Aku Berdamai dengan Luka Masa Lalu"</a>
             </h5>
             <p class="card-text text-muted">
               Kisah perjalanan Rina bangkit dari depresi pasca-trauma dan menemukan harapan baru melalui konseling.

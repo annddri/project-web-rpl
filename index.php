@@ -1,3 +1,5 @@
+<?php session_start(); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,10 +44,26 @@
 
       </ul>
 
-      <div class="d-flex gap-2">
-        <a href="signup.html" class="btn btn-primary">Daftar</a>
-        <a href="login.html" class="btn btn-outline-primary">Masuk</a>
-      </div>
+      <div class="d-flex align-items-center gap-2">
+    
+        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+            <div class="text-end me-2 d-none d-md-block">
+                <span class="fw-bold text-primary d-block">
+                    Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>
+                </span>
+                <small class="text-muted" style="font-size: 0.75rem;">
+                    <?php echo ucfirst($_SESSION['role']); ?>
+                </small>
+            </div>
+
+            <a href="logout.php" class="btn btn-danger btn-sm px-3">Logout</a>
+
+        <?php else: ?>
+            <a href="signup.html" class="btn btn-primary">Daftar</a>
+            <a href="login.html" class="btn btn-outline-primary">Masuk</a>
+        <?php endif; ?>
+
+    </div>
       
     </div>
   </div>
@@ -190,6 +208,16 @@
           </div>
         </div>
       </div>
+      </div> <div class="row mt-5">
+      <div class="col text-center">
+        <p class="mb-3 text-muted">Belum menemukan spesialis yang cocok?</p>
+        <a href="konselor.php" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
+          Lihat Daftar Lengkap Konselor <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+      </div>
+    </div>
+
+  </div> </section>
 
   </div>
 </section>

@@ -1,4 +1,5 @@
 <?php session_start(); ?>
+<?php include 'components/modal_jadwal.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -149,7 +150,14 @@
             <h5 class="card-title fw-bold">Dr. Andi Pratama</h5>
             <p class="card-text text-muted small mb-4">Psikolog Klinis & Trauma</p>
             <div class="mt-auto d-grid">
-              <a href="#" class="btn btn-primary">Mulai Konseling</a>
+              <button type="button" class="btn btn-primary w-100" 
+                data-bs-toggle="modal" 
+                data-bs-target="#modalJadwal"
+                data-nama="<?php echo $row['nama']; ?>"
+                data-spesialis="<?php echo !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum'; ?>"
+                data-id="<?php echo $row['user_id']; ?>">
+                Mulai Konseling
+              </button>
             </div>
           </div>
         </div>

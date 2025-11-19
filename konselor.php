@@ -2,8 +2,6 @@
 session_start(); 
 include 'koneksi.php'; 
 ?>
-<?php include 'components/modal_jadwal.php'; ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -32,8 +30,10 @@ include 'koneksi.php';
       <div class="d-flex align-items-center gap-2">
         <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
             <div class="text-end me-2 d-none d-md-block">
-                <span class="fw-bold text-primary d-block">Halo, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                <small class="text-muted" style="font-size: 0.75rem;"><?php echo ucfirst($_SESSION['role']); ?></small>
+                <span class="fw-bold text-primary d-block">Halo, <?php echo htmlspecialchars($_SESSION['nama']); ?></span>
+                <small class="text-muted" style="font-size: 0.75rem;">
+                    <?php echo isset($_SESSION['role']) ? ucfirst($_SESSION['role']) : 'User'; ?>
+                </small>
             </div>
             <a href="logout.php" class="btn btn-danger btn-sm px-3">Logout</a>
         <?php else: ?>
@@ -56,80 +56,90 @@ include 'koneksi.php';
     <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
 
         <?php
-        // QUERY: Ambil 10 Konselor saja
-        $query = "SELECT * FROM users WHERE role = 'konselor' AND status = 'active' LIMIT 8";
-        $result = mysqli_query($conn, $query);
+// 1. UBAH QUERY (Gunakan LEFT JOIN biar data profil ikut terpanggil)
+$query = "SELECT u.*, kp.pendidikan, kp.nomor_str, kp.metode_terapi, kp.bahasa, kp.tentang_saya
+          FROM users u
+          LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id
+          WHERE u.role = 'konselor' AND u.status = 'active'
+          LIMIT 10";
 
-        // Variabel bantu untuk memutar gambar (agar gambar 1-4 dipakai bergantian)
-        $img_counter = 1; 
+$result = mysqli_query($conn, $query);
+$img_counter = 1; 
 
-        if (mysqli_num_rows($result) > 0) {
-            while($row = mysqli_fetch_assoc($result)) {
-                
-                // Logika pilih gambar: dokter1.jpg s/d dokter4.jpg
-                $gambar = "img/dokter" . $img_counter . ".jpg";
-                $img_counter++;
-                if ($img_counter > 4) { $img_counter = 1; } // Reset balik ke 1 jika sudah lewat 4
-
-                // Handle Spesialisasi kosong
-                $spesialis = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
-                ?>
-                
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm hover-card">
-                        <img src="<?php echo $gambar; ?>" class="card-img-top" alt="<?php echo $row['nama']; ?>" style="height: 220px; object-fit: cover;">
-                        
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold text-dark"><?php echo $row['nama']; ?></h5>
-                            <span class="badge bg-primary-subtle text-primary mb-2 w-auto align-self-start">
-                                <?php echo $spesialis; ?>
-                            </span>
-                            
-                            <p class="card-text text-muted small flex-grow-1">
-                                <?php 
-                                // Tampilkan potongan pengalaman (jika ada)
-                                echo !empty($row['pengalaman']) 
-                                    ? substr($row['pengalaman'], 0, 60) . '...' 
-                                    : 'Siap membantu Anda pulih dari masalah kesehatan mental.'; 
-                                ?>
-                            </p>
-                            
-                            <div class="d-grid mt-3">
-                                <button class="btn btn-outline-primary btn-sm">Lihat Profil</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <?php
-            }
-        } else {
-            echo '<div class="col-12 text-center"><p class="text-muted">Data konselor belum tersedia.</p></div>';
-        }
+if (mysqli_num_rows($result) > 0) {
+    while($row = mysqli_fetch_assoc($result)) {
+        
+        // Rotasi Gambar Dummy
+        $gambar = "img/dokter" . $img_counter . ".jpg";
+        $img_counter = ($img_counter < 4) ? $img_counter + 1 : 1;
+        
+        // Cek Data Kosong (Fallback)
+        $spesialis  = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
+        $pendidikan = !empty($row['pendidikan']) ? $row['pendidikan'] : '-';
+        $tentang    = !empty($row['tentang_saya']) ? $row['tentang_saya'] : 'Konselor profesional Stark Hope.';
+        $metode     = !empty($row['metode_terapi']) ? $row['metode_terapi'] : '-';
+        $bahasa     = !empty($row['bahasa']) ? $row['bahasa'] : 'Indonesia';
+        $str        = !empty($row['nomor_str']) ? $row['nomor_str'] : '-';
         ?>
+        
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm hover-card">
+                <img src="<?php echo $gambar; ?>" class="card-img-top" style="height: 220px; object-fit: cover;">
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold text-dark mb-1"><?php echo $row['nama']; ?></h5>
+                    <small class="text-primary fw-bold mb-3"><?php echo $spesialis; ?></small>
+                    
+                    <p class="card-text text-muted small flex-grow-1">
+                        <?php echo substr($tentang, 0, 60) . '...'; ?>
+                    </p>
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary w-50"
+                           data-bs-toggle="modal" 
+                           data-bs-target="#modalProfil"
+                           data-nama="<?php echo $row['nama']; ?>"
+                           data-spesialis="<?php echo $spesialis; ?>"
+                           data-foto="<?php echo $gambar; ?>"
+                           data-str="<?php echo $str; ?>"
+                           data-bahasa="<?php echo $bahasa; ?>"
+                           data-tentang="<?php echo $tentang; ?>"
+                           data-pendidikan="<?php echo $pendidikan; ?>"
+                           data-metode="<?php echo $metode; ?>">
+                           Detail
+                        </button>
 
-    </div>
-    
-    <div class="row mt-5">
-        <div class="col d-flex justify-content-center">
-            <nav>
-              <ul class="pagination">
-                <li class="page-item disabled"><a class="page-link">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-              </ul>
-            </nav>
+                        <button type="button" class="btn btn-primary w-50" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalJadwal"
+                            data-nama="<?php echo $row['nama']; ?>"
+                            data-spesialis="<?php echo $spesialis; ?>"
+                            data-id="<?php echo $row['user_id']; ?>"> Book
+                        </button>
+                    </div>
+
+                </div>
+            </div>
         </div>
+        
+        <?php
+    }
+} else {
+    echo '<div class="col-12 text-center"><p class="text-muted">Data konselor belum tersedia.</p></div>';
+}
+?>
+
     </div>
 </div>
 
-<footer class="bg-dark text-light py-4 mt-auto">
-    <div class="container text-center">
+<footer class="bg-dark text-light py-4 mt-auto text-center">
+    <div class="container">
         <p class="small text-white-50 mb-0">&copy; 2024 Stark Hope Indonesia.</p>
     </div>
 </footer>
+
+<?php include 'components/modal_profil.php'; ?>
+<?php include 'components/modal_jadwal.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
 </body>

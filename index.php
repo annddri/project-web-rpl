@@ -12,59 +12,73 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container-fluid container">
-    <a class="navbar-brand fw-bold text-primary" href="index.html">Stark Hope</a>
+  <div class="container">
     
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarNav">
-
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Layanan Konseling
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Mulai Konsultasi</a></li>
-            <li><a class="dropdown-item" href="#">Jadwal Konsultasi</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Riwayat Sesi</a></li>
-          </ul>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="#">Temukan Ahli</a>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="#edukasi">Wawasan & Artikel</a>
-        </li>
-
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="#">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link" href="konselor.php">Cari Konselor</a></li>
+        <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
+        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+            <li class="nav-item"><a class="nav-link" href="jadwal_konsultasi.php">Jadwal Konsultasi</a></li>
+        <?php endif; ?>
       </ul>
 
-      <div class="d-flex align-items-center gap-2">
-    
+      <div class="d-flex align-items-center gap-3">
+        
         <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
-            <div class="text-end me-2 d-none d-md-block">
-                <span class="fw-bold text-primary d-block">
-                    Halo, <?php echo htmlspecialchars($_SESSION['username']); ?>
-                </span>
-                <small class="text-muted" style="font-size: 0.75rem;">
-                    <?php echo ucfirst($_SESSION['role']); ?>
-                </small>
-            </div>
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                   id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                    
+                    <div class="text-end me-2 d-none d-md-block" style="line-height: 1.2;">
+                        <span class="fw-bold text-dark d-block" style="font-size: 0.9rem;">
+                            <?php echo htmlspecialchars($_SESSION['username']); ?>
+                        </span>
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            <?php echo ucfirst($_SESSION['role']); ?>
+                        </small>
+                    </div>
 
-            <a href="logout.php" class="btn btn-danger btn-sm px-3">Logout</a>
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=0D6EFD&color=fff" 
+                         alt="Profil" 
+                         class="rounded-circle border border-2 border-white shadow-sm"
+                         width="40" height="40">
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser">
+                    <li class="d-block d-md-none px-3 py-2 text-center">
+                        <span class="fw-bold text-primary">Halo, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    </li>
+                    
+                    <li>
+                        <a class="dropdown-item py-2" href="profil.php">
+                            <i class="bi bi-person-circle me-2 text-secondary"></i> Profil Saya
+                        </a>
+                    </li>
+                    
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <li>
+                        <a class="dropdown-item py-2 text-danger fw-bold" href="logout.php">
+                            <i class="bi bi-box-arrow-right me-2"></i> Keluar (Logout)
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
         <?php else: ?>
             <a href="signup.html" class="btn btn-primary">Daftar</a>
             <a href="login.html" class="btn btn-outline-primary">Masuk</a>
         <?php endif; ?>
 
-    </div>
+      </div>
       
     </div>
   </div>
@@ -138,53 +152,72 @@
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
       <?php
-      // 1. PANGGIL KONEKSI (Jika di paling atas file belum ada)
-      include_once 'koneksi.php'; 
+include_once 'koneksi.php'; // Pastikan koneksi dipanggil
 
-      // 2. BUAT QUERY: Ambil 4 dokter saja untuk halaman beranda
-      $query_home = "SELECT * FROM users WHERE role = 'konselor' AND status = 'active' LIMIT 4";
-      $result_home = mysqli_query($conn, $query_home);
+// QUERY UNTUK HOME (Sama kayak tadi, tapi LIMIT 4)
+$query_home = "SELECT u.*, kp.pendidikan, kp.nomor_str, kp.metode_terapi, kp.bahasa, kp.tentang_saya
+               FROM users u
+               LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id
+               WHERE u.role = 'konselor' AND u.status = 'active'
+               LIMIT 4"; // <--- PENTING: Tetap limit 4 biar rapi
 
-      // 3. CEK APAKAH ADA DATA
-      if (mysqli_num_rows($result_home) > 0) {
-          
-          // 4. MULAI LOOPING (Agar $row terisi data)
-          while ($row = mysqli_fetch_assoc($result_home)) {
-              // Handle jika spesialisasi kosong
-              $spesialis = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
-              // Handle gambar (Disini saya set default/random dummy)
-              $gambar = "img/dokter1.jpg"; 
-      ?>
+$result_home = mysqli_query($conn, $query_home);
+$img_counter = 1;
 
-          <div class="col">
-            <div class="card h-100 border-0 shadow-sm">
-              <img src="<?php echo $gambar; ?>" class="card-img-top img-konselor" alt="<?php echo $row['nama']; ?>" 
-                  style="cursor: pointer; height: 250px; object-fit: cover;">
-              
-              <div class="card-body d-flex flex-column">
+if (mysqli_num_rows($result_home) > 0) {
+    while ($row = mysqli_fetch_assoc($result_home)) {
+        
+        // Variable Setup (Sama persis)
+        $gambar = "img/dokter" . $img_counter . ".jpg";
+        $img_counter = ($img_counter < 4) ? $img_counter + 1 : 1;
+        
+        $spesialis  = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
+        $pendidikan = !empty($row['pendidikan']) ? $row['pendidikan'] : '-';
+        $tentang    = !empty($row['tentang_saya']) ? $row['tentang_saya'] : 'Halo, saya siap membantu Anda.';
+        $metode     = !empty($row['metode_terapi']) ? $row['metode_terapi'] : '-';
+        $bahasa     = !empty($row['bahasa']) ? $row['bahasa'] : 'Indonesia';
+        $str        = !empty($row['nomor_str']) ? $row['nomor_str'] : '-';
+?>
+
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
+            <img src="<?php echo $gambar; ?>" class="card-img-top" style="height: 250px; object-fit: cover;">
+            
+            <div class="card-body d-flex flex-column">
                 <h5 class="card-title fw-bold"><?php echo $row['nama']; ?></h5>
                 <p class="card-text text-muted small mb-4"><?php echo $spesialis; ?></p>
                 
-                <div class="mt-auto d-grid">
-                  <button type="button" class="btn btn-primary w-100" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#modalJadwal"
-                    data-nama="<?php echo $row['nama']; ?>"
-                    data-spesialis="<?php echo $spesialis; ?>"
-                    data-id="<?php echo $row['user_id']; ?>">
-                    Mulai Konseling
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                <div class="mt-auto d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary w-50"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalProfil"
+                        data-nama="<?php echo $row['nama']; ?>"
+                        data-spesialis="<?php echo $spesialis; ?>"
+                        data-foto="<?php echo $gambar; ?>"
+                        data-str="<?php echo $str; ?>"
+                        data-bahasa="<?php echo $bahasa; ?>"
+                        data-tentang="<?php echo $tentang; ?>"
+                        data-pendidikan="<?php echo $pendidikan; ?>"
+                        data-metode="<?php echo $metode; ?>">
+                        Detail
+                    </button>
 
-      <?php 
-          } // 5. TUTUP KURUNG KURAWAL WHILE (Penting!)
-      } else {
-          echo "<p class='text-center w-100'>Belum ada data konselor.</p>";
-      }
-      ?>
+                    <button type="button" class="btn btn-primary w-50" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalJadwal"
+                        data-nama="<?php echo $row['nama']; ?>"
+                        data-spesialis="<?php echo $spesialis; ?>"
+                        data-id="<?php echo $row['user_id']; ?>"> Book
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<?php 
+    }
+}
+?>
 
     </div>
     <div class="row mt-5">
@@ -368,6 +401,9 @@
 
   </div>
 </footer>
+
+<?php include 'components/modal_profil.php'; ?>
+<?php include 'components/modal_jadwal.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>

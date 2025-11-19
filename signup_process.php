@@ -44,7 +44,7 @@ $query = "INSERT INTO users (user_id, nama, username, email, password, role, sta
 if (mysqli_query($conn, $query)) {
     echo "<script>
             alert('Pendaftaran Berhasil! Silakan login.');
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
           </script>";
 } else {
     // Tampilkan error jika ada masalah dengan query

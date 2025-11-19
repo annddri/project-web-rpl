@@ -16,7 +16,7 @@
             
             <div class="card-body">
                 <div class="mb-3">
-                    <a href="index.html" class="text-decoration-none text-secondary small">
+                    <a href="index.php" class="text-decoration-none text-secondary small">
                         &larr; Kembali ke Beranda
                     </a>
                 </div>
@@ -46,7 +46,7 @@
 
                 <div class="text-center">
                     <p class="mb-0">Belum punya akun?</p>
-                    <a href="signup.html" class="text-decoration-none fw-bold">Daftar Akun Baru</a>
+                    <a href="signup.php" class="text-decoration-none fw-bold">Daftar Akun Baru</a>
                 </div>
             </div>
 

@@ -30,15 +30,23 @@ if (mysqli_num_rows($result) > 0) {
         $_SESSION['role'] = $row['role'];         // Simpan role (penting untuk dashboard nanti)
         $_SESSION['nama'] = $row['nama'];         // Simpan nama asli
         
-        // Redirect ke Dashboard
+if ($row['role'] == 'konselor') {
+        // Jika Konselor, arahkan ke halaman kerjanya
+        echo "<script>
+                alert('Selamat Datang, Dokter " . $row['nama'] . "!');
+                window.location.href = 'jadwal_konsultasi.php'; 
+              </script>";
+    } else {
+        // Jika Pasien, arahkan ke halaman depan
         echo "<script>
                 alert('Selamat Datang, " . $row['username'] . "!');
                 window.location.href = 'index.php'; 
               </script>";
+    }
     } else {
-        echo "<script>alert('Password salah!'); window.location.href='login.html';</script>";
+        echo "<script>alert('Password salah!'); window.location.href='login.php';</script>";
     }
 } else {
-    echo "<script>alert('Email tidak terdaftar!'); window.location.href='login.html';</script>";
+    echo "<script>alert('Email tidak terdaftar!'); window.location.href='login.php';</script>";
 }
 ?>

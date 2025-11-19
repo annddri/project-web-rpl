@@ -11,44 +11,22 @@
       </div>
       
       <div class="modal-body">
-        <p class="text-muted small mb-3">Pilih jadwal yang sesuai untuk melanjutkan ke pembayaran:</p>
+        <p class="text-muted small mb-3">Pilih jadwal yang tersedia (Real-time):</p>
         
-        <table class="table table-bordered align-middle small">
-            <thead class="table-light">
-                <tr>
-                    <th>Hari</th>
-                    <th>Jam</th>
-                    <th width="30%">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tabelJadwal">
-                <tr>
-                    <td>Senin</td>
-                    <td>09:00 - 12:00</td>
-                    <td>
-                        <a href="pembayaran.php?hari=Senin&jam=09:00" class="btn btn-sm btn-primary w-100 btn-booking">
-                            Booking
-                        </a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Rabu</td>
-                    <td>13:00 - 16:00</td>
-                    <td>
-                        <a href="pembayaran.php?hari=Rabu&jam=13:00" class="btn btn-sm btn-primary w-100 btn-booking">
-                            Booking
-                        </a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Jumat</td>
-                    <td>09:00 - 11:00</td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary w-100" disabled>Penuh</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle small text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hari</th>
+                        <th>Jam</th>
+                        <th width="30%">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="isiTabelJadwal">
+                    <tr><td colspan="3">Memuat jadwal...</td></tr>
+                </tbody>
+            </table>
+        </div>
       </div>
     </div>
   </div>
@@ -58,28 +36,30 @@
     const modalJadwal = document.getElementById('modalJadwal')
     if (modalJadwal) {
         modalJadwal.addEventListener('show.bs.modal', event => {
-            // 1. Tangkap data dari tombol yang ditekan
+            // 1. Tangkap data dari tombol
             const button = event.relatedTarget
+            const id = button.getAttribute('data-id') // User ID Konselor (misal: DOC-01)
             const nama = button.getAttribute('data-nama')
             const spesialis = button.getAttribute('data-spesialis')
-            const harga = 150000; // Contoh harga flat
 
-            // 2. Update Teks Judul Modal
+            // 2. Update Judul Modal
             modalJadwal.querySelector('#modalNamaKonselor').textContent = nama
             modalJadwal.querySelector('#modalSpesialisasi').textContent = spesialis
             
-            // 3. Update Link di Tombol Booking (Menambahkan paramater dokter & harga)
-            // Kita cari semua tombol yang punya class 'btn-booking'
-            const bookingButtons = modalJadwal.querySelectorAll('.btn-booking');
-            
-            bookingButtons.forEach(btn => {
-                // Ambil URL dasar (misal: pembayaran.php?hari=Senin&jam=09:00)
-                // Kita reset dulu href-nya biar tidak menumpuk jika modal dibuka tutup
-                let originalHref = btn.getAttribute('href').split('&dokter=')[0]; 
-                
-                // Tambahkan nama dokter dan harga ke URL
-                btn.href = originalHref + `&dokter=${encodeURIComponent(nama)}&harga=${harga}`;
-            });
+            // 3. PANGGIL DATA JADWAL VIA AJAX (FETCH)
+            const tbody = modalJadwal.querySelector('#isiTabelJadwal');
+            tbody.innerHTML = '<tr><td colspan="3" class="py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+
+            // Panggil file PHP yang baru kita buat
+            fetch('get_jadwal.php?id=' + id)
+                .then(response => response.text())
+                .then(data => {
+                    // Masukkan hasil HTML dari PHP ke dalam tbody
+                    tbody.innerHTML = data;
+                })
+                .catch(error => {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-danger">Gagal memuat jadwal.</td></tr>';
+                });
         })
     }
 </script>

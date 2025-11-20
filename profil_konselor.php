@@ -9,7 +9,7 @@ if (!isset($_SESSION['status']) || $_SESSION['role'] != 'konselor') {
 
 $user_id = $_SESSION['user_id'];
 
-// --- LOGIKA 1: SIMPAN PROFIL ---
+// --- LOGIKA 1: AJUKAN PERUBAHAN PROFIL (MASUK KE TABEL PENGAJUAN) ---
 if (isset($_POST['simpan_profil'])) {
     $nama         = mysqli_real_escape_string($conn, $_POST['nama']);
     $spesialisasi = mysqli_real_escape_string($conn, $_POST['spesialisasi']);
@@ -19,31 +19,46 @@ if (isset($_POST['simpan_profil'])) {
     $bahasa       = mysqli_real_escape_string($conn, $_POST['bahasa']);
     $tentang      = mysqli_real_escape_string($conn, $_POST['tentang']);
 
-    $q_user = "UPDATE users SET nama = '$nama', spesialisasi = '$spesialisasi' WHERE user_id = '$user_id'";
-    mysqli_query($conn, $q_user);
-    $_SESSION['nama'] = $nama; 
-
-    $cek_profil = mysqli_query($conn, "SELECT * FROM konselor_profil WHERE user_id = '$user_id'");
-    if (mysqli_num_rows($cek_profil) > 0) {
-        $q_profil = "UPDATE konselor_profil SET pendidikan='$pendidikan', nomor_str='$str', metode_terapi='$metode', bahasa='$bahasa', tentang_saya='$tentang' WHERE user_id='$user_id'";
+    // Cek apakah masih ada pengajuan pending?
+    $cek_pending = mysqli_query($conn, "SELECT * FROM pengajuan_profil WHERE user_id='$user_id' AND status='Pending'");
+    
+    if (mysqli_num_rows($cek_pending) > 0) {
+        // Update pengajuan yang sudah ada
+        $query = "UPDATE pengajuan_profil SET 
+                  nama_baru='$nama', spesialisasi_baru='$spesialisasi', pendidikan_baru='$pendidikan', 
+                  str_baru='$str', metode_baru='$metode', bahasa_baru='$bahasa', tentang_baru='$tentang'
+                  WHERE user_id='$user_id' AND status='Pending'";
     } else {
-        $q_profil = "INSERT INTO konselor_profil (user_id, pendidikan, nomor_str, metode_terapi, bahasa, tentang_saya) VALUES ('$user_id', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang')";
+        // Buat pengajuan baru
+        $query = "INSERT INTO pengajuan_profil (user_id, nama_baru, spesialisasi_baru, pendidikan_baru, str_baru, metode_baru, bahasa_baru, tentang_baru)
+                  VALUES ('$user_id', '$nama', '$spesialisasi', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang')";
     }
-    mysqli_query($conn, $q_profil);
-    echo "<script>alert('Profil diperbarui!'); window.location.href='profil_konselor.php';</script>";
+
+    if (mysqli_query($conn, $query)) {
+        echo "<script>alert('Perubahan diajukan! Menunggu persetujuan Admin.'); window.location.href='profil_konselor.php';</script>";
+    } else {
+        echo "<script>alert('Gagal: " . mysqli_error($conn) . "');</script>";
+    }
 }
 
-// --- LOGIKA 2: TAMBAH JADWAL (DENGAN HARGA) ---
+// ... (Logika Jadwal Tetap Sama, karena jadwal biasanya realtime tidak perlu approval admin untuk simplifikasi) ...
+
+// --- LOGIKA 2: TAMBAH JADWAL (DIPERBAIKI: MASUK KE PENGAJUAN) ---
 if (isset($_POST['tambah_jadwal'])) {
     $hari  = $_POST['hari'];
     $mulai = $_POST['jam_mulai']; 
     $akhir = $_POST['jam_selesai']; 
-    $harga = $_POST['harga']; // Tangkap Harga
+    $harga = $_POST['harga']; 
 
-    $q_tambah = "INSERT INTO jadwal_praktik (user_id, hari, jam_mulai, jam_selesai, harga) 
-                 VALUES ('$user_id', '$hari', '$mulai', '$akhir', '$harga')";
-    mysqli_query($conn, $q_tambah);
-    echo "<script>alert('Jadwal ditambahkan!'); window.location.href='profil_konselor.php';</script>";
+    // Insert ke tabel PENGAJUAN (Bukan jadwal_praktik)
+    $q_ajukan = "INSERT INTO pengajuan_jadwal (user_id, hari, jam_mulai, jam_selesai, harga, status) 
+                 VALUES ('$user_id', '$hari', '$mulai', '$akhir', '$harga', 'Pending')";
+                 
+    if(mysqli_query($conn, $q_ajukan)) {
+        echo "<script>alert('Jadwal berhasil diajukan! Menunggu persetujuan Admin.'); window.location.href='profil_konselor.php';</script>";
+    } else {
+        echo "<script>alert('Gagal mengajukan: " . mysqli_error($conn) . "');</script>";
+    }
 }
 
 // --- LOGIKA 3: HAPUS JADWAL ---
@@ -51,6 +66,16 @@ if (isset($_GET['hapus_jadwal'])) {
     $id_jadwal = $_GET['hapus_jadwal'];
     mysqli_query($conn, "DELETE FROM jadwal_praktik WHERE id = '$id_jadwal' AND user_id = '$user_id'");
     echo "<script>alert('Jadwal dihapus.'); window.location.href='profil_konselor.php';</script>";
+}
+
+// --- LOGIKA 4: HAPUS RIWAYAT PENGAJUAN ---
+if (isset($_GET['hapus_pengajuan'])) {
+    $id_pengajuan = $_GET['hapus_pengajuan'];
+    
+    // Hapus dari tabel pengajuan (Hanya membersihkan log riwayat, tidak mempengaruhi jadwal aktif)
+    mysqli_query($conn, "DELETE FROM pengajuan_jadwal WHERE id = '$id_pengajuan' AND user_id = '$user_id'");
+    
+    echo "<script>alert('Riwayat pengajuan dihapus.'); window.location.href='profil_konselor.php';</script>";
 }
 
 // AMBIL DATA
@@ -129,9 +154,20 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                             </form>
                         </div>
 
-                        <div class="tab-pane fade" id="jadwal-pane">
+                        <?php
+// Cek Status Pengajuan Terakhir
+$q_status = mysqli_query($conn, "SELECT status FROM pengajuan_profil WHERE user_id='$user_id' ORDER BY id DESC LIMIT 1");
+$row_status = mysqli_fetch_assoc($q_status);
+
+if ($row_status && $row_status['status'] == 'Pending') {
+    echo '<div class="alert alert-warning small mt-2 py-2"><i class="bi bi-hourglass-split"></i> Menunggu Persetujuan Admin</div>';
+}
+?>
+
+<div class="tab-pane fade" id="jadwal-pane">
+                            
                             <div class="bg-light p-3 rounded mb-4 border">
-                                <h6 class="fw-bold mb-3">Tambah Jadwal Baru</h6>
+                                <h6 class="fw-bold mb-3">Ajukan Jadwal Baru</h6>
                                 <form method="POST" class="row g-2 align-items-end">
                                     <div class="col-md-3">
                                         <label class="small fw-bold">Hari</label>
@@ -145,7 +181,8 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                                             <option value="Minggu">Minggu</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2"> <label class="small fw-bold">Mulai</label>
+                                    <div class="col-md-2">
+                                        <label class="small fw-bold">Mulai</label>
                                         <input type="time" name="jam_mulai" class="form-control form-control-sm" required>
                                     </div>
                                     <div class="col-md-2">
@@ -157,18 +194,78 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                                         <input type="number" name="harga" class="form-control form-control-sm" placeholder="150000" required>
                                     </div>
                                     <div class="col-md-2">
-                                        <button type="submit" name="tambah_jadwal" class="btn btn-success btn-sm w-100"><i class="bi bi-plus-circle"></i></button>
+                                        <button type="submit" name="tambah_jadwal" class="btn btn-warning btn-sm w-100 text-dark">
+                                            <i class="bi bi-send"></i> Ajukan
+                                        </button>
                                     </div>
                                 </form>
                             </div>
 
+                            <h6 class="fw-bold text-primary">
+                                <i class="bi bi-clock-history"></i> Riwayat Pengajuan Jadwal
+                            </h6>
+                            
+                            <div class="table-responsive mb-4">
+                                <table class="table table-sm table-bordered small align-middle bg-white">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Jadwal Diajukan</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-center" width="10%">Aksi</th> </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        // UPDATE QUERY: 
+                                        // Hapus bagian "AND status != 'Disetujui'" supaya SEMUA STATUS muncul
+                                        $q_aj = mysqli_query($conn, "SELECT * FROM pengajuan_jadwal WHERE user_id='$user_id' ORDER BY id DESC");
+                                        
+                                        if (mysqli_num_rows($q_aj) > 0):
+                                            while($aj = mysqli_fetch_assoc($q_aj)):
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?php echo $aj['hari']; ?></strong>, 
+                                                <?php echo $aj['jam_mulai'] . '-' . $aj['jam_selesai']; ?>
+                                                <div class="text-muted" style="font-size: 11px;">
+                                                    Rp <?php echo number_format($aj['harga']); ?>
+                                                </div>
+                                            </td>
+                                            
+                                            <td class="text-center">
+                                                <?php if($aj['status']=='Pending'): ?>
+                                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                                <?php elseif($aj['status']=='Disetujui'): ?>
+                                                    <span class="badge bg-success">Disetujui</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Ditolak</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            
+                                            <td class="text-center">
+                                                <a href="profil_konselor.php?hapus_pengajuan=<?php echo $aj['id']; ?>" 
+                                                   class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                                   onclick="return confirm('Hapus catatan riwayat ini? (Jadwal aktif tidak akan terhapus)')"
+                                                   title="Bersihkan Riwayat">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <?php endwhile; else: ?>
+                                            <tr><td colspan="3" class="text-center text-muted fst-italic">Belum ada riwayat pengajuan.</td></tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h6 class="fw-bold text-success"><i class="bi bi-check-circle"></i> Jadwal Aktif (Tayang)</h6>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover small align-middle">
                                     <thead class="table-secondary">
                                         <tr>
                                             <th>Hari</th>
                                             <th>Jam</th>
-                                            <th>Harga</th> <th class="text-center">Aksi</th>
+                                            <th>Harga</th>
+                                            <th class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -179,16 +276,21 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                                                 <td><?php echo $jadwal['jam_mulai'] . ' - ' . $jadwal['jam_selesai']; ?></td>
                                                 <td>Rp <?php echo number_format($jadwal['harga'], 0, ',', '.'); ?></td>
                                                 <td class="text-center">
-                                                    <a href="profil_konselor.php?hapus_jadwal=<?php echo $jadwal['id']; ?>" class="btn btn-danger btn-sm py-0" onclick="return confirm('Hapus jadwal ini?')"><i class="bi bi-trash"></i></a>
+                                                    <a href="profil_konselor.php?hapus_jadwal=<?php echo $jadwal['id']; ?>" 
+                                                       class="btn btn-danger btn-sm py-0"
+                                                       onclick="return confirm('Hapus jadwal ini?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
                                                 </td>
                                             </tr>
                                             <?php endwhile; ?>
                                         <?php else: ?>
-                                            <tr><td colspan="4" class="text-center text-muted">Belum ada jadwal.</td></tr>
+                                            <tr><td colspan="4" class="text-center text-muted">Belum ada jadwal aktif.</td></tr>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div>

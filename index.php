@@ -74,8 +74,8 @@
             </div>
 
         <?php else: ?>
-            <a href="signup.html" class="btn btn-primary">Daftar</a>
-            <a href="login.html" class="btn btn-outline-primary">Masuk</a>
+            <a href="signup.php" class="btn btn-primary">Daftar</a>
+            <a href="login.php" class="btn btn-outline-primary">Masuk</a>
         <?php endif; ?>
 
       </div>

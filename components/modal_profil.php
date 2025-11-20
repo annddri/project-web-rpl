@@ -44,23 +44,45 @@
       </div>
       
 <div class="modal-footer border-0 bg-light">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-        
-        <?php 
-        // Cek apakah session role ada, dan apakah dia BUKAN konselor
-        if (!isset($_SESSION['role']) || $_SESSION['role'] != 'konselor'): 
-        ?>
-            
-            <button type="button" class="btn btn-primary" id="btnBookingDariProfil" data-bs-toggle="modal" data-bs-target="#modalJadwal">
-                Jadwalkan Konsultasi
-            </button>
-
-        <?php endif; ?>
+        <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
       </div>
 
     </div>
   </div>
 </div>
+
+<script>
+    const modalProfil = document.getElementById('modalProfil')
+    if (modalProfil) {
+        modalProfil.addEventListener('show.bs.modal', event => {
+            // Tangkap tombol pemicu
+            const button = event.relatedTarget
+            
+            // Ambil data dari atribut tombol
+            const nama = button.getAttribute('data-nama')
+            const spesialis = button.getAttribute('data-spesialis')
+            const foto = button.getAttribute('data-foto')
+            const str = button.getAttribute('data-str')
+            const bahasa = button.getAttribute('data-bahasa')
+            const tentang = button.getAttribute('data-tentang')
+            const pendidikan = button.getAttribute('data-pendidikan')
+            const metode = button.getAttribute('data-metode')
+            
+            // Isi Modal Profil
+            modalProfil.querySelector('#profilNama').textContent = nama
+            modalProfil.querySelector('#profilSpesialis').textContent = spesialis
+            modalProfil.querySelector('#profilFoto').src = foto
+            modalProfil.querySelector('#profilSTR').textContent = str
+            modalProfil.querySelector('#profilBahasa').textContent = bahasa
+            modalProfil.querySelector('#profilTentang').textContent = tentang
+            modalProfil.querySelector('#profilPendidikan').textContent = pendidikan
+            modalProfil.querySelector('#profilMetode').textContent = metode
+            
+            // KITA HAPUS BAGIAN JS YANG MENGURUS TOMBOL BOOKING DI SINI
+            // Karena tombolnya sudah dihapus di HTML atas.
+        })
+    }
+</script>
 
 <script>
     const modalProfil = document.getElementById('modalProfil')

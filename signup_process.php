@@ -19,7 +19,7 @@ $check_query = "SELECT * FROM users WHERE email = '$email' OR username = '$usern
 $check_result = mysqli_query($conn, $check_query);
 
 if (mysqli_num_rows($check_result) > 0) {
-    echo "<script>alert('Username atau Email sudah terdaftar!'); window.location.href='signup.html';</script>";
+    echo "<script>alert('Username atau Email sudah terdaftar!'); window.location.href='signup.php';</script>";
     exit;
 }
 

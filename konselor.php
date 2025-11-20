@@ -94,8 +94,13 @@ if (mysqli_num_rows($result) > 0) {
                         <?php echo substr($tentang, 0, 60) . '...'; ?>
                     </p>
                     
+                    <?php 
+                        $is_konselor = (isset($_SESSION['role']) && $_SESSION['role'] == 'konselor'); 
+                    ?>
+
                     <div class="mt-3 d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary w-50"
+                        
+                        <button type="button" class="btn btn-outline-primary <?php echo $is_konselor ? 'w-100' : 'w-50'; ?>"
                            data-bs-toggle="modal" 
                            data-bs-target="#modalProfil"
                            data-nama="<?php echo $row['nama']; ?>"
@@ -109,13 +114,17 @@ if (mysqli_num_rows($result) > 0) {
                            Detail
                         </button>
 
-                        <button type="button" class="btn btn-primary w-50" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#modalJadwal"
-                            data-nama="<?php echo $row['nama']; ?>"
-                            data-spesialis="<?php echo $spesialis; ?>"
-                            data-id="<?php echo $row['user_id']; ?>"> Book
-                        </button>
+                        <?php if (!$is_konselor): ?>
+                            <button type="button" class="btn btn-primary w-50" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#modalJadwal"
+                               data-nama="<?php echo $row['nama']; ?>"
+                               data-spesialis="<?php echo $spesialis; ?>"
+                               data-id="<?php echo $row['user_id']; ?>">
+                               Book
+                            </button>
+                        <?php endif; ?>
+
                     </div>
 
                 </div>

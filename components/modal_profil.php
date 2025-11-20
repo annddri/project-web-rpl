@@ -43,11 +43,19 @@
         </div>
       </div>
       
-      <div class="modal-footer border-0 bg-light">
+<div class="modal-footer border-0 bg-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-        <button type="button" class="btn btn-primary" id="btnBookingDariProfil" data-bs-toggle="modal" data-bs-target="#modalJadwal">
-            Jadwalkan Konsultasi
-        </button>
+        
+        <?php 
+        // Cek apakah session role ada, dan apakah dia BUKAN konselor
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 'konselor'): 
+        ?>
+            
+            <button type="button" class="btn btn-primary" id="btnBookingDariProfil" data-bs-toggle="modal" data-bs-target="#modalJadwal">
+                Jadwalkan Konsultasi
+            </button>
+
+        <?php endif; ?>
       </div>
 
     </div>

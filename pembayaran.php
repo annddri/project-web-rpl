@@ -16,9 +16,10 @@ if (!isset($_SESSION['status']) || $_SESSION['status'] != 'login') {
 $dokter = isset($_GET['dokter']) ? $_GET['dokter'] : '-';
 $hari   = isset($_GET['hari']) ? $_GET['hari'] : '-';
 $jam    = isset($_GET['jam']) ? $_GET['jam'] : '-';
-$harga  = isset($_GET['harga']) ? $_GET['harga'] : 0;
-?>
 
+// TANGKAP HARGA DARI URL
+$harga  = isset($_GET['harga']) ? $_GET['harga'] : 150000;
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>

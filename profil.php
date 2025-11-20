@@ -122,7 +122,7 @@ $d = mysqli_fetch_assoc($result);
                                     <option value="L" <?php echo ($d['jenis_kelamin'] == 'L') ? 'selected' : ''; ?>>Laki-laki</option>
                                     
                                     <option value="P" <?php echo ($d['jenis_kelamin'] == 'P') ? 'selected' : ''; ?>>Perempuan</option>
-                                    <option value="Tidak ingin memberi tahu" <?php echo ($d['jenis_kelamin'] == 'Tidak ingin memberi tahu') ? 'selected' : ''; ?>>Tidak ingin memberi tahu</option>
+                                    <option value="T" <?php echo ($d['jenis_kelamin'] == 'T') ? 'selected' : ''; ?>>Tidak ingin memberi tahu</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

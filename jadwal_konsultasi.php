@@ -32,22 +32,36 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg <?php echo ($role=='konselor') ? 'navbar-dark bg-primary' : 'navbar-light bg-white shadow-sm'; ?>">
+<nav class="navbar navbar-expand-lg <?php echo ($role=='konselor') ? 'navbar-dark bg-primary' : 'navbar-light bg-white shadow-sm'; ?> mb-4">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="<?php echo ($role=='konselor') ? '#' : 'index.php'; ?>">
-        <?php echo ($role=='konselor') ? '<i class="bi bi-hospital me-2"></i>Panel Konselor' : 'Stark Hope'; ?>
+    
+    <a class="navbar-brand fw-bold" href="<?php echo ($role=='konselor') ? 'profil_konselor.php' : 'index.php'; ?>">
+        <?php echo ($role=='konselor') ? '<i class="bi bi-hospital-fill me-2"></i>Panel Konselor' : 'Stark Hope'; ?>
     </a>
     
     <div class="d-flex align-items-center gap-3">
-        <span class="<?php echo ($role=='konselor') ? 'text-white' : 'text-muted'; ?> small">
-            Halo, <?php echo htmlspecialchars($nama_user); ?> (<?php echo ucfirst($role); ?>)
-        </span>
         
+        <span class="<?php echo ($role=='konselor') ? 'text-white' : 'text-muted'; ?> small d-none d-md-block">
+            Halo, <?php echo htmlspecialchars($nama_user); ?> 
+        </span>
+
         <?php if($role == 'pasien'): ?>
-            <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="index.php" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-house-door-fill"></i> Beranda
+            </a>
         <?php else: ?>
-            <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
+            <a href="index.php" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-house-door-fill"></i> Beranda
+            </a>
+
+            <a href="profil_konselor.php" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-person-circle me-1"></i> Profil Saya
+            </a>
+            <a href="logout.php" class="btn btn-danger btn-sm">
+                <i class="bi bi-power"></i>
+            </a>
         <?php endif; ?>
+        
     </div>
   </div>
 </nav>
@@ -67,9 +81,15 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
             
             <?php
             // 3. QUERY DINAMIS BERDASARKAN ROLE
+            // ...
             if ($role == 'konselor') {
-                // JIKA KONSELOR: Join ke tabel users untuk ambil nama pasien
-                $query = "SELECT k.*, u.nama AS nama_pasien 
+                // UPDATE QUERY: Tambahkan data detail user (u.email, u.jenis_kelamin, dll)
+                $query = "SELECT k.*, 
+                                 u.nama AS nama_pasien, 
+                                 u.email, 
+                                 u.jenis_kelamin, 
+                                 u.tanggal_lahir, 
+                                 u.alamat
                           FROM konsultasi k 
                           JOIN users u ON k.user_id = u.user_id 
                           WHERE k.konselor_nama = '$nama_user' 
@@ -116,7 +136,6 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
                             </div>
 
                             <div class="col-md-3 p-4 text-md-end bg-light h-100 d-flex flex-column justify-content-center">
-    
     <?php 
         // Tentukan warna badge
         if ($row['status'] == 'Terjadwal') {
@@ -127,41 +146,81 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
             $badge_class = 'bg-danger'; // Dibatalkan
         }
     ?>
-    <span class="badge <?php echo $badge_class; ?> mb-3 align-self-md-end w-auto">
+<span class="badge <?php echo ($row['status']=='Terjadwal')?'bg-success':'bg-secondary'; ?> mb-3 align-self-md-end w-auto">
         <?php echo $row['status']; ?>
     </span>
 
     <?php 
     // 1. JIKA STATUS SUDAH SELESAI
-    if ($row['status'] == 'Selesai') { 
-    ?>
-        <button class="btn btn-secondary btn-sm mb-2" disabled>
-            <i class="bi bi-slash-circle me-1"></i> Sesi Berakhir
-        </button>
-
-    <?php 
-    // 2. JIKA MASIH TERJADWAL DAN ADA LINK
-    } elseif (!empty($row['link_meet'])) { 
-    ?>
+    if ($row['status'] == 'Selesai'): ?>
+        <button class="btn btn-secondary btn-sm mb-2" disabled>Sesi Berakhir</button>
+    <?php elseif (!empty($row['link_meet'])): ?>
         <a href="<?php echo $row['link_meet']; ?>" target="_blank" class="btn btn-primary btn-sm shadow-sm mb-2">
             <i class="bi bi-camera-video-fill me-2"></i>Masuk Room
         </a>
+    <?php else: ?>
+        <button class="btn btn-secondary btn-sm mb-2" disabled>Menunggu Link</button>
+    <?php endif; ?>
 
     <?php 
-    // 3. JIKA LINK BELUM ADA
-    } else { 
+    // Debugging: Pastikan role benar
+    // var_dump($role, $row['status']); 
+    
+    if ($role == 'konselor' && $row['status'] == 'Terjadwal'): 
     ?>
-        <button class="btn btn-secondary btn-sm mb-2" disabled>Menunggu Link</button>
-    <?php } ?>
-
-
-    <?php if ($role == 'konselor' && $row['status'] == 'Terjadwal'): ?>
         <a href="jadwal_konsultasi.php?aksi=selesai&id=<?php echo $row['id']; ?>" 
            class="btn btn-outline-success btn-sm"
-           onclick="return confirm('Apakah sesi konseling ini benar-benar sudah selesai? Link akan dinonaktifkan.')">
+           onclick="return confirm('Tandai sesi ini sebagai selesai?')">
             <i class="bi bi-check-lg me-1"></i> Tandai Selesai
         </a>
     <?php endif; ?>
+
+
+    <?php if ($role == 'konselor'): ?>
+    <?php
+    // LOGIKA LAMA (SALAH):
+    // $p_gender = !empty($row['jenis_kelamin']) ? (($row['jenis_kelamin']=='L')?'Laki-laki':'Perempuan') : '-';
+
+    // LOGIKA BARU (BENAR):
+    $kode_jk = $row['jenis_kelamin'];
+    
+    if ($kode_jk == 'L') {
+        $p_gender = 'Laki-laki';
+    } elseif ($kode_jk == 'P') {
+        $p_gender = 'Perempuan';
+    } elseif ($kode_jk == 'T') {
+        $p_gender = 'Tidak ingin memberi tahu';
+    } else {
+        $p_gender = '-'; // Jika data kosong
+    }
+
+    // Format Tanggal Lahir
+    $p_lahir = !empty($row['tanggal_lahir']) ? date('d M Y', strtotime($row['tanggal_lahir'])) : '-';
+    
+    // Alamat
+    $p_alamat = !empty($row['alamat']) ? $row['alamat'] : '-';
+?>
+
+    <div class="d-flex align-items-center">
+        <h5 class="fw-bold mb-1 me-2"><?php echo $nama_lawan; ?></h5>
+        
+        <a href="#" class="text-primary" 
+           data-bs-toggle="modal" 
+           data-bs-target="#modalPasien"
+           data-id="<?php echo $row['user_id']; ?>"
+           data-nama="<?php echo $row['nama_pasien']; ?>"
+           data-email="<?php echo $row['email']; ?>"
+           data-gender="<?php echo $p_gender; ?>"
+           data-lahir="<?php echo $p_lahir; ?>"
+           data-alamat="<?php echo $p_alamat; ?>"
+           title="Lihat Profil Pasien">
+           <i class="bi bi-info-circle-fill"></i>
+        </a>
+    </div>
+
+<?php else: ?>
+    <h5 class="fw-bold mb-1"><?php echo $nama_lawan; ?></h5>
+<?php endif; ?>
 
 </div>
 
@@ -179,6 +238,8 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
         </div>
     </div>
 </div>
+
+<?php include 'components/modal_pasien.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
 </body>

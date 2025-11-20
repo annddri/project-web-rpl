@@ -58,7 +58,7 @@
                     </li>
                     
                     <li>
-                        <a class="dropdown-item py-2" href="profil.php">
+                        <a class="dropdown-item py-2" href="<?php echo ($_SESSION['role'] == 'konselor') ? 'profil_konselor.php' : 'profil.php'; ?>">
                             <i class="bi bi-person-circle me-2 text-secondary"></i> Profil Saya
                         </a>
                     </li>
@@ -187,8 +187,13 @@ if (mysqli_num_rows($result_home) > 0) {
                 <h5 class="card-title fw-bold"><?php echo $row['nama']; ?></h5>
                 <p class="card-text text-muted small mb-4"><?php echo $spesialis; ?></p>
                 
+                <?php 
+                    $is_konselor = (isset($_SESSION['role']) && $_SESSION['role'] == 'konselor'); 
+                ?>
+
                 <div class="mt-auto d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary w-50"
+                    
+                    <button type="button" class="btn btn-outline-primary <?php echo $is_konselor ? 'w-100' : 'w-50'; ?>"
                         data-bs-toggle="modal" 
                         data-bs-target="#modalProfil"
                         data-nama="<?php echo $row['nama']; ?>"
@@ -202,13 +207,17 @@ if (mysqli_num_rows($result_home) > 0) {
                         Detail
                     </button>
 
-                    <button type="button" class="btn btn-primary w-50" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#modalJadwal"
-                        data-nama="<?php echo $row['nama']; ?>"
-                        data-spesialis="<?php echo $spesialis; ?>"
-                        data-id="<?php echo $row['user_id']; ?>"> Book
-                    </button>
+                    <?php if (!$is_konselor): ?>
+                        <button type="button" class="btn btn-primary w-50" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalJadwal"
+                            data-nama="<?php echo $row['nama']; ?>"
+                            data-spesialis="<?php echo $spesialis; ?>"
+                            data-id="<?php echo $row['user_id']; ?>">
+                            Book
+                        </button>
+                    <?php endif; ?>
+
                 </div>
             </div>
         </div>

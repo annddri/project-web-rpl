@@ -1,50 +1,6 @@
 <?php 
 session_start(); 
-
-// DATA DUMMY (5 KONTEN CAMPURAN)
-// Di aplikasi nyata, ini diambil dari database tabel 'articles'
-$semua_artikel = [
-    [
-        'id' => 1,
-        'judul' => 'Cara Mengelola Serangan Panik di Tempat Umum',
-        'kategori' => 'Artikel',
-        'warna' => 'primary', // Biru
-        'gambar' => 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=600&auto=format&fit=crop',
-        'desc' => 'Pelajari teknik pernapasan 4-7-8 dan langkah praktis menenangkan diri.'
-    ],
-    [
-        'id' => 2,
-        'judul' => 'Meditasi Pagi untuk Ketenangan Jiwa',
-        'kategori' => 'Video',
-        'warna' => 'danger', // Merah
-        'gambar' => 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop',
-        'desc' => 'Panduan visual meditasi ringan 10 menit sebelum memulai aktivitas.'
-    ],
-    [
-        'id' => 3,
-        'judul' => '"Aku Berdamai dengan Luka Masa Lalu"',
-        'kategori' => 'Kisah Nyata',
-        'warna' => 'success', // Hijau
-        'gambar' => 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=600&auto=format&fit=crop',
-        'desc' => 'Kisah inspiratif Rina bangkit dari depresi dan menemukan harapan baru.'
-    ],
-    [
-        'id' => 4, // ID BARU
-        'judul' => 'Pentingnya "Sleep Hygiene" untuk Mental',
-        'kategori' => 'Artikel',
-        'warna' => 'primary',
-        'gambar' => 'https://images.unsplash.com/photo-1541781777621-ddb1d920ca7a?q=80&w=600&auto=format&fit=crop',
-        'desc' => 'Mengapa tidur yang berkualitas adalah kunci utama kestabilan emosi Anda.'
-    ],
-    [
-        'id' => 5, // ID BARU
-        'judul' => 'Kenali Tanda "Burnout" Pekerjaan',
-        'kategori' => 'Video',
-        'warna' => 'danger',
-        'gambar' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop',
-        'desc' => 'Video singkat gejala kelelahan mental akibat kerja dan solusinya.'
-    ]
-];
+include 'koneksi.php'; // WAJIB ADA
 ?>
 
 <!DOCTYPE html>
@@ -70,14 +26,19 @@ $semua_artikel = [
         <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
         <li class="nav-item"><a class="nav-link active fw-bold" href="artikel.php">Pusat Edukasi</a></li>
       </ul>
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-3">
         <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
-            <div class="text-end me-2 d-none d-md-block">
-                <span class="fw-bold text-primary d-block">Halo, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                    <span class="fw-bold text-primary me-2 d-none d-md-block"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=0D6EFD&color=fff" class="rounded-circle" width="35">
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="profil.php">Profil</a></li>
+                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
+                </ul>
             </div>
-            <a href="logout.php" class="btn btn-danger btn-sm px-3">Logout</a>
         <?php else: ?>
-            <a href="signup.html" class="btn btn-primary">Daftar</a>
             <a href="login.html" class="btn btn-outline-primary">Masuk</a>
         <?php endif; ?>
       </div>
@@ -88,61 +49,66 @@ $semua_artikel = [
 <header class="bg-dark text-white py-5">
     <div class="container text-center">
         <h1 class="fw-bold display-5">Wawasan & Inspirasi</h1>
-        <p class="lead opacity-75">Kumpulan artikel, video, dan cerita untuk menemani perjalanan kesehatan mentalmu.</p>
-        
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control rounded-start-pill ps-4" placeholder="Cari topik (misal: cemas, tidur...)">
-                    <button class="btn btn-primary rounded-end-pill px-4" type="button"><i class="bi bi-search"></i></button>
-                </div>
-            </div>
-        </div>
+        <p class="lead opacity-75">Kumpulan konten terbaru yang dikurasi oleh tim ahli kami.</p>
     </div>
 </header>
 
-<div class="container mt-5 mb-4">
-    <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-dark rounded-pill px-4 active">Semua</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4">Artikel</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4">Video</button>
-        <button class="btn btn-outline-secondary rounded-pill px-4">Kisah Nyata</button>
-    </div>
-</div>
-
-<div class="container mb-5">
+<div class="container my-5">
     <div class="row g-4">
         
-        <?php foreach($semua_artikel as $item): ?>
+        <?php 
+        // 1. QUERY KE DATABASE (Mengambil data yang diinput Admin)
+        $query = "SELECT * FROM edukasi ORDER BY id DESC";
+        $result = mysqli_query($conn, $query);
+
+        if(mysqli_num_rows($result) > 0):
+            while($row = mysqli_fetch_assoc($result)):
+                
+                // Logika Warna Badge Berdasarkan Kategori
+                $kategori = $row['kategori'];
+                $bg_color = 'primary'; // Default Biru (Artikel)
+                if ($kategori == 'Video') $bg_color = 'danger'; // Merah
+                if ($kategori == 'Kisah Nyata') $bg_color = 'success'; // Hijau
+
+                // Buat Deskripsi Singkat (Potong teks isi konten)
+                // strip_tags: Menghilangkan tag HTML (<p>, <br>) biar rapi
+                $deskripsi_pendek = substr(strip_tags($row['isi_konten']), 0, 100) . '...';
+        ?>
+        
         <div class="col-md-6 col-lg-4">
             <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
                 <div class="position-relative">
-                    <img src="<?php echo $item['gambar']; ?>" class="card-img-top" alt="<?php echo $item['judul']; ?>" style="height: 200px; object-fit: cover;">
+                    <img src="<?php echo $row['gambar_url']; ?>" class="card-img-top" alt="Thumbnail" style="height: 200px; object-fit: cover;">
                     
-                    <span class="position-absolute top-0 start-0 m-3 badge bg-<?php echo $item['warna']; ?> shadow-sm">
-                        <?php echo $item['kategori']; ?>
+                    <span class="position-absolute top-0 start-0 m-3 badge bg-<?php echo $bg_color; ?> shadow-sm">
+                        <?php echo $kategori; ?>
                     </span>
                 </div>
                 
                 <div class="card-body p-4 d-flex flex-column">
                     <h5 class="card-title fw-bold mb-3">
-                        <a href="detail_artikel.php?id=<?php echo $item['id']; ?>" class="text-dark text-decoration-none stretched-link">
-                            <?php echo $item['judul']; ?>
+                        <a href="detail_artikel.php?id=<?php echo $row['id']; ?>" class="text-dark text-decoration-none stretched-link">
+                            <?php echo $row['judul']; ?>
                         </a>
                     </h5>
+                    
                     <p class="card-text text-muted small mb-4 flex-grow-1">
-                        <?php echo $item['desc']; ?>
+                        <?php echo $deskripsi_pendek; ?>
                     </p>
-                    <div class="mt-auto">
-                        <span class="text-primary fw-bold small">
-                            <?php echo ($item['kategori'] == 'Video') ? 'Tonton Sekarang' : 'Baca Selengkapnya'; ?> 
-                            <i class="bi bi-arrow-right ms-1"></i>
-                        </span>
+                    
+                    <div class="mt-auto d-flex justify-content-between align-items-center text-muted small">
+                        <span><i class="bi bi-person me-1"></i> <?php echo $row['penulis']; ?></span>
+                        <span><?php echo date('d M Y', strtotime($row['tanggal_upload'])); ?></span>
                     </div>
                 </div>
             </div>
         </div>
-        <?php endforeach; ?>
+
+        <?php endwhile; else: ?>
+            <div class="col-12 text-center py-5">
+                <h4 class="text-muted">Belum ada konten edukasi saat ini.</h4>
+            </div>
+        <?php endif; ?>
 
     </div>
 </div>

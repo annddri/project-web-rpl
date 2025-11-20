@@ -243,111 +243,83 @@ if (mysqli_num_rows($result_home) > 0) {
   </div>
 </section>
 
-<section class="py-5" id="edukasi">
-  <div class="container">
-
-    <div class="row mb-5 align-items-end">
-      <div class="col-md-8">
-        <span class="badge bg-primary-subtle text-primary fw-bold mb-2">INSIGHT & MOTIVASI</span>
-        <h2 class="fw-bold display-6">Jurnal Edukasi & Inspirasi</h2>
-        <p class="text-muted lead mb-0">
-          Temukan artikel kesehatan, video panduan, dan kisah nyata yang menguatkan langkahmu.
-        </p>
-      </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="artikel.php" class="btn btn-outline-dark rounded-pill px-4">Lihat Semua Artikel <i class="bi bi-arrow-right ms-2"></i></a>
-      </div>
-    </div>
-
-    <div class="row g-4">
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=600&auto=format&fit=crop" class="card-img-top img-edukasi" alt="Artikel Cemas">
-            <span class="position-absolute top-0 start-0 m-3 badge bg-white text-primary fw-bold shadow-sm">
-              <i class="bi bi-book me-1"></i> Artikel
-            </span>
-          </div>
-          <div class="card-body p-4">
-            <div class="d-flex align-items-center text-muted small mb-2">
-              <span><i class="bi bi-clock me-1"></i> 5 Menit Baca</span>
-              <span class="mx-2">•</span>
-              <span>Oleh Dr. Andi</span>
+<section id="edukasi" class="py-5 bg-light">
+        <div class="container">
+            
+            <div class="row mb-5 align-items-end">
+                <div class="col-md-8">
+                    <h6 class="text-primary fw-bold text-uppercase">Jurnal Edukasi</h6>
+                    <h2 class="fw-bold display-6">Wawasan Kesehatan Mental</h2>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="artikel.php" class="btn btn-outline-dark rounded-pill px-4">
+                        Lihat Semua Artikel <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
             </div>
-            <h5 class="card-title fw-bold mb-3">
-              <a href="detail_artikel.php?id=1" class="text-dark text-decoration-none stretched-link">Cara Mengelola Serangan Panik di Tempat Umum</a>
-            </h5>
-            <p class="card-text text-muted">
-              Pelajari teknik pernapasan 4-7-8 dan langkah praktis untuk menenangkan diri saat kecemasan melanda secara tiba-tiba.
-            </p>
-          </div>
-          <div class="card-footer bg-white border-0 p-4 pt-0">
-            <span class="text-primary fw-bold text-decoration-none">Baca Selengkapnya <i class="bi bi-chevron-right small"></i></span>
-          </div>
+
+            <div class="row g-4">
+                
+                <?php
+                // Query: Ambil 3 artikel terbaru saja untuk ditampilkan di beranda
+                $q_edu_home = mysqli_query($conn, "SELECT * FROM edukasi ORDER BY id DESC LIMIT 3");
+                
+                // Cek apakah ada data?
+                if (mysqli_num_rows($q_edu_home) > 0) {
+                    while ($edu = mysqli_fetch_assoc($q_edu_home)) {
+                        
+                        // Logika Warna Badge Kategori
+                        $kat = $edu['kategori'];
+                        $badge_color = 'primary'; // Default Biru
+                        if ($kat == 'Video') $badge_color = 'danger'; // Merah
+                        if ($kat == 'Kisah Nyata') $badge_color = 'success'; // Hijau
+                        
+                        // Deskripsi pendek (hapus tag html dulu, lalu potong)
+                        $deskripsi = substr(strip_tags($edu['isi_konten']), 0, 90) . '...';
+                ?>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
+                            <div class="position-relative">
+                                <img src="<?php echo $edu['gambar_url']; ?>" class="card-img-top" alt="Thumbnail" style="height: 200px; object-fit: cover;">
+                                
+                                <span class="position-absolute top-0 start-0 m-3 badge bg-<?php echo $badge_color; ?> shadow-sm">
+                                    <?php echo $kat; ?>
+                                </span>
+                            </div>
+                            
+                            <div class="card-body p-4 d-flex flex-column">
+                                <h5 class="card-title fw-bold mb-3">
+                                    <a href="detail_artikel.php?id=<?php echo $edu['id']; ?>" class="text-dark text-decoration-none stretched-link">
+                                        <?php echo $edu['judul']; ?>
+                                    </a>
+                                </h5>
+                                
+                                <p class="card-text text-muted small mb-4 flex-grow-1">
+                                    <?php echo $deskripsi; ?>
+                                </p>
+                                
+                                <div class="mt-auto">
+                                    <span class="text-primary fw-bold small">
+                                        <?php echo ($kat == 'Video') ? 'Tonton Sekarang' : 'Baca Selengkapnya'; ?> 
+                                        <i class="bi bi-arrow-right ms-1"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <?php 
+                    } // End While
+                } else {
+                    // Jika database kosong
+                    echo '<div class="col-12 text-center text-muted py-5">Belum ada konten edukasi terbaru.</div>';
+                }
+                ?>
+
+            </div>
         </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop" class="card-img-top img-edukasi" alt="Video Yoga">
-            <span class="position-absolute top-0 start-0 m-3 badge bg-danger text-white fw-bold shadow-sm">
-              <i class="bi bi-play-circle-fill me-1"></i> Video
-            </span>
-            <div class="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-50 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                <i class="bi bi-play-fill text-white fs-2"></i>
-            </div>
-          </div>
-          <div class="card-body p-4">
-             <div class="d-flex align-items-center text-muted small mb-2">
-              <span><i class="bi bi-camera-video me-1"></i> 10 Menit</span>
-              <span class="mx-2">•</span>
-              <span>Mindfulness</span>
-            </div>
-            <h5 class="card-title fw-bold mb-3">
-              <a href="detail_artikel.php?id=2" class="text-dark text-decoration-none stretched-link">Meditasi Pagi untuk Ketenangan Jiwa</a>
-            </h5>
-            <p class="card-text text-muted">
-              Panduan visual meditasi ringan yang bisa Anda lakukan setiap pagi sebelum memulai aktivitas.
-            </p>
-          </div>
-          <div class="card-footer bg-white border-0 p-4 pt-0">
-            <span class="text-primary fw-bold text-decoration-none">Tonton Sekarang <i class="bi bi-chevron-right small"></i></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=600&auto=format&fit=crop" class="card-img-top img-edukasi" alt="Kisah Nyata">
-            <span class="position-absolute top-0 start-0 m-3 badge bg-success text-white fw-bold shadow-sm">
-              <i class="bi bi-people-fill me-1"></i> Kisah Nyata
-            </span>
-          </div>
-          <div class="card-body p-4">
-             <div class="d-flex align-items-center text-muted small mb-2">
-              <span><i class="bi bi-calendar3 me-1"></i> 12 Nov 2024</span>
-              <span class="mx-2">•</span>
-              <span>Inspirasi</span>
-            </div>
-            <h5 class="card-title fw-bold mb-3">
-              <a href="detail_artikel.php?id=3" class="text-dark text-decoration-none stretched-link">"Aku Berdamai dengan Luka Masa Lalu"</a>
-            </h5>
-            <p class="card-text text-muted">
-              Kisah perjalanan Rina bangkit dari depresi pasca-trauma dan menemukan harapan baru melalui konseling.
-            </p>
-          </div>
-          <div class="card-footer bg-white border-0 p-4 pt-0">
-            <span class="text-primary fw-bold text-decoration-none">Baca Kisahnya <i class="bi bi-chevron-right small"></i></span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
+    </section>
 
 <footer class="bg-dark text-light pt-5 pb-4 mt-auto">
   <div class="container">

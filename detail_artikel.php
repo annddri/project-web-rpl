@@ -1,16 +1,13 @@
 <?php 
 session_start(); 
-include 'koneksi.php'; // Koneksi Database
+include 'koneksi.php'; 
 
-// 1. TANGKAP ID DARI URL
 $id_artikel = isset($_GET['id']) ? $_GET['id'] : 0;
 
-// 2. AMBIL DATA DARI DATABASE BERDASARKAN ID
 $query = "SELECT * FROM edukasi WHERE id = '$id_artikel'";
 $result = mysqli_query($conn, $query);
 $data = mysqli_fetch_assoc($result);
 
-// Jika data tidak ditemukan (misal ID ngawur), kembalikan ke halaman artikel
 if (!$data) {
     header("location: artikel.php");
     exit;
@@ -73,7 +70,6 @@ if (!$data) {
                 <h5 class="fw-bold mb-3">Artikel Terbaru Lainnya</h5>
                 <div class="list-group list-group-flush">
                     <?php
-                    // Ambil 3 artikel lain KECUALI artikel yang sedang dibuka
                     $q_lain = mysqli_query($conn, "SELECT * FROM edukasi WHERE id != '$id_artikel' ORDER BY id DESC LIMIT 3");
                     while($lain = mysqli_fetch_assoc($q_lain)):
                     ?>
@@ -94,7 +90,7 @@ if (!$data) {
 
 <footer class="bg-dark text-light py-4 mt-auto text-center">
     <div class="container">
-        <p class="small text-white-50 mb-0">&copy; 2024 Stark Hope Indonesia.</p>
+        <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>
     </div>
 </footer>
 

@@ -1,76 +1,54 @@
-/* Kita buat class kustom baru, misal .carousel-fixed-height */
-
-/* 1. Atur tinggi carousel-item */
 .carousel-fixed-height .carousel-item {
-  height: 400px; /* <-- UBAH TINGGI CAROUSEL ANDA DI SINI */
+  height: 400px; 
   
-  /* Ini opsional, tapi bagus untuk transisi yang mulus */
   transition: transform 0.6s ease-in-out;
 }
 
-/* 2. Buat gambar beradaptasi (ini bagian pentingnya) */
 .carousel-fixed-height .carousel-item img {
-  /* Paksa gambar untuk mengisi 100% tinggi dari item (500px) */
   height: 100%;
-  
-  /* Ini properti ajaibnya:
-    - 'cover' = Menutupi seluruh area, pertahankan rasio aspek, 
-                dan potong (crop) sisa gambar.
-    - 'center' = Memastikan pemotongan berfokus di tengah gambar.
-  */
   object-fit: cover;
   object-position: center;
 }
 
-/* Class khusus untuk foto konselor */
 .img-konselor {
-  height: 150px;       /* Tinggi fix untuk semua foto */
-  width: 100%;         /* Lebar mengikuti kartu */
-  object-fit: cover;   /* Memotong gambar agar rapi (tidak gepeng) */
-  object-position: center;/* Fokus ke bagian atas foto (agar wajah tidak terpotong) */
+  height: 150px;       
+  width: 100%;         
+  object-fit: cover;  
+  object-position: center;
 }
 
-/* =========================================
-   4. KONTEN EDUKASI
-   ========================================= */
-
-/* Mengatur ukuran gambar thumbnail agar seragam */
 .img-edukasi {
     height: 220px;
     width: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease; /* Efek zoom halus */
+    transition: transform 0.5s ease; 
 }
 
-/* Efek Hover pada Card */
 .hover-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hover-card:hover {
-    transform: translateY(-5px); /* Card naik sedikit ke atas */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; /* Bayangan makin dalam */
+    transform: translateY(-5px); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; 
 }
 
-/* Efek zoom gambar saat card di-hover */
 .hover-card:hover .img-edukasi {
     transform: scale(1.05);
 }
 
 .footer-link {
-    color: rgba(255, 255, 255, 0.5); /* Putih transparan (abu-abu) */
+    color: rgba(255, 255, 255, 0.5); 
     text-decoration: none;
     transition: all 0.3s ease;
 }
 
-/* Saat mouse diarahkan ke link footer */
 .footer-link:hover {
-    color: #ffffff; /* Jadi putih terang */
+    color: #ffffff; 
     text-decoration: none;
-    padding-left: 5px; /* Efek geser sedikit saat di-hover */
+    padding-left: 5px; 
 }
 
-/* Icon sosmed di footer */
 .social-icon {
     color: rgba(255, 255, 255, 0.7);
     font-size: 1.2rem;
@@ -79,11 +57,9 @@
 }
 
 .social-icon:hover {
-    color: #0d6efd; /* Warna biru primary saat hover */
+    color: #0d6efd; 
 }
 
-/* Memastikan Footer selalu di bawah (Sticky Footer) */
-/* Tambahkan class ini ke tag <body> jika konten halamannya sedikit */
 body {
     display: flex;
     flex-direction: column;

@@ -55,10 +55,8 @@
     const modalProfil = document.getElementById('modalProfil')
     if (modalProfil) {
         modalProfil.addEventListener('show.bs.modal', event => {
-            // Tangkap tombol pemicu
             const button = event.relatedTarget
             
-            // Ambil data dari atribut tombol
             const nama = button.getAttribute('data-nama')
             const spesialis = button.getAttribute('data-spesialis')
             const foto = button.getAttribute('data-foto')
@@ -68,7 +66,6 @@
             const pendidikan = button.getAttribute('data-pendidikan')
             const metode = button.getAttribute('data-metode')
             
-            // Isi Modal Profil
             modalProfil.querySelector('#profilNama').textContent = nama
             modalProfil.querySelector('#profilSpesialis').textContent = spesialis
             modalProfil.querySelector('#profilFoto').src = foto
@@ -78,8 +75,6 @@
             modalProfil.querySelector('#profilPendidikan').textContent = pendidikan
             modalProfil.querySelector('#profilMetode').textContent = metode
             
-            // KITA HAPUS BAGIAN JS YANG MENGURUS TOMBOL BOOKING DI SINI
-            // Karena tombolnya sudah dihapus di HTML atas.
         })
     }
 </script>
@@ -88,10 +83,8 @@
     const modalProfil = document.getElementById('modalProfil')
     if (modalProfil) {
         modalProfil.addEventListener('show.bs.modal', event => {
-            // 1. Tangkap tombol pemicu
             const button = event.relatedTarget
             
-            // 2. Ambil data dari atribut
             const nama = button.getAttribute('data-nama')
             const spesialis = button.getAttribute('data-spesialis')
             const foto = button.getAttribute('data-foto')
@@ -101,7 +94,6 @@
             const pendidikan = button.getAttribute('data-pendidikan')
             const metode = button.getAttribute('data-metode')
             
-            // 3. Isi Modal Profil
             modalProfil.querySelector('#profilNama').textContent = nama
             modalProfil.querySelector('#profilSpesialis').textContent = spesialis
             modalProfil.querySelector('#profilFoto').src = foto
@@ -111,8 +103,6 @@
             modalProfil.querySelector('#profilPendidikan').textContent = pendidikan
             modalProfil.querySelector('#profilMetode').textContent = metode
 
-            // 4. Update Tombol "Jadwalkan Konsultasi" di dalam modal profil
-            // Agar saat diklik, data dokternya terkirim ke modal jadwal
             const btnBooking = modalProfil.querySelector('#btnBookingDariProfil')
             btnBooking.setAttribute('data-nama', nama)
             btnBooking.setAttribute('data-spesialis', spesialis)

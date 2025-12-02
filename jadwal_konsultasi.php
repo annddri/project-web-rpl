@@ -2,17 +2,15 @@
 session_start(); 
 include 'koneksi.php';
 
-// 1. CEK LOGIN
 if (!isset($_SESSION['status']) || $_SESSION['status'] != 'login') {
-    header("location: login.html");
+    header("location: login.php");
     exit;
 }
 
-$role = $_SESSION['role']; // 'pasien' atau 'konselor'
+$role = $_SESSION['role'];
 $user_id = $_SESSION['user_id'];
 $nama_user = $_SESSION['nama'];
 
-// 2. LOGIKA AKSI (KHUSUS KONSELOR: UPDATE STATUS)
 if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' && isset($_GET['id'])) {
     $id_konsul = $_GET['id'];
     mysqli_query($conn, "UPDATE konsultasi SET status='Selesai' WHERE id='$id_konsul'");
@@ -32,39 +30,41 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg <?php echo ($role=='konselor') ? 'navbar-dark bg-primary' : 'navbar-light bg-white shadow-sm'; ?> mb-4">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
   <div class="container">
     
-    <a class="navbar-brand fw-bold" href="<?php echo ($role=='konselor') ? 'profil_konselor.php' : 'index.php'; ?>">
-        <?php echo ($role=='konselor') ? '<i class="bi bi-hospital-fill me-2"></i>Panel Konselor' : 'Stark Hope'; ?>
-    </a>
+    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
     
-    <div class="d-flex align-items-center gap-3">
-        
-        <span class="<?php echo ($role=='konselor') ? 'text-white' : 'text-muted'; ?> small d-none d-md-block">
-            Halo, <?php echo htmlspecialchars($nama_user); ?> 
-        </span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <?php if($role == 'pasien'): ?>
-            <a href="index.php" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-house-door-fill"></i> Beranda
-            </a>
-        <?php else: ?>
-            <a href="index.php" class="btn btn-outline-light btn-sm">
-                <i class="bi bi-house-door-fill"></i> Beranda
-            </a>
-
-            <a href="profil_konselor.php" class="btn btn-outline-light btn-sm">
-                <i class="bi bi-person-circle me-1"></i> Profil Saya
-            </a>
-            <a href="logout.php" class="btn btn-danger btn-sm">
-                <i class="bi bi-power"></i>
-            </a>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link" href="konselor.php">Cari Konselor</a></li>
+        <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
+        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+            <li class="nav-item"><a class="nav-link active" href="#">Jadwal Konsultasi</a></li>
         <?php endif; ?>
+      </ul>
+
+      <div class="d-flex align-items-center gap-3">
         
+        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+            
+        <?php else: ?>
+            <a href="signup.php" class="btn btn-primary">Daftar</a>
+            <a href="login.php" class="btn btn-outline-primary">Masuk</a>
+        <?php endif; ?>
+
+      </div>
+      
     </div>
   </div>
 </nav>
+<!-- END NAVBAR -->
 
 <div class="container py-5">
     <div class="row mb-4">
@@ -80,10 +80,7 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
         <div class="col-12">
             
             <?php
-            // 3. QUERY DINAMIS BERDASARKAN ROLE
-            // ...
             if ($role == 'konselor') {
-                // UPDATE QUERY: Tambahkan data detail user (u.email, u.jenis_kelamin, dll)
                 $query = "SELECT k.*, 
                                  u.nama AS nama_pasien, 
                                  u.email, 
@@ -95,7 +92,6 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
                           WHERE k.konselor_nama = '$nama_user' 
                           ORDER BY k.id DESC";
             } else {
-                // JIKA PASIEN: Ambil berdasarkan user_id sendiri
                 $query = "SELECT * FROM konsultasi WHERE user_id = '$user_id' ORDER BY id DESC";
             }
 
@@ -103,11 +99,9 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
 
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
-                    
-                    // Tentukan siapa "Lawan Bicara"
                     if ($role == 'konselor') {
                         $label_lawan = "Pasien";
-                        $nama_lawan  = $row['nama_pasien']; // Dari hasil JOIN
+                        $nama_lawan  = $row['nama_pasien']; 
                     } else {
                         $label_lawan = "Konselor";
                         $nama_lawan  = $row['konselor_nama'];
@@ -136,93 +130,83 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
                             </div>
 
                             <div class="col-md-3 p-4 text-md-end bg-light h-100 d-flex flex-column justify-content-center">
-    <?php 
-        // Tentukan warna badge
-        if ($row['status'] == 'Terjadwal') {
-            $badge_class = 'bg-success';
-        } elseif ($row['status'] == 'Selesai') {
-            $badge_class = 'bg-secondary'; // Abu-abu jika selesai
-        } else {
-            $badge_class = 'bg-danger'; // Dibatalkan
-        }
-    ?>
-<span class="badge <?php echo ($row['status']=='Terjadwal')?'bg-success':'bg-secondary'; ?> mb-3 align-self-md-end w-auto">
-        <?php echo $row['status']; ?>
-    </span>
+                                <?php 
+                                    if ($row['status'] == 'Terjadwal') {
+                                        $badge_class = 'bg-success';
+                                    } elseif ($row['status'] == 'Selesai') {
+                                        $badge_class = 'bg-secondary'; 
+                                    } else {
+                                        $badge_class = 'bg-danger'; 
+                                    }
+                                ?>
+                            <span class="badge <?php echo ($row['status']=='Terjadwal')?'bg-success':'bg-secondary'; ?> mb-3 align-self-md-end w-auto">
+                                    <?php echo $row['status']; ?>
+                                </span>
 
-    <?php 
-    // 1. JIKA STATUS SUDAH SELESAI
-    if ($row['status'] == 'Selesai'): ?>
-        <button class="btn btn-secondary btn-sm mb-2" disabled>Sesi Berakhir</button>
-    <?php elseif (!empty($row['link_meet'])): ?>
-        <a href="<?php echo $row['link_meet']; ?>" target="_blank" class="btn btn-primary btn-sm shadow-sm mb-2">
-            <i class="bi bi-camera-video-fill me-2"></i>Masuk Room
-        </a>
-    <?php else: ?>
-        <button class="btn btn-secondary btn-sm mb-2" disabled>Menunggu Link</button>
-    <?php endif; ?>
+                                <?php 
+                                if ($row['status'] == 'Selesai'): ?>
+                                    <button class="btn btn-secondary btn-sm mb-2" disabled>Sesi Berakhir</button>
+                                <?php elseif (!empty($row['link_meet'])): ?>
+                                    <a href="<?php echo $row['link_meet']; ?>" target="_blank" class="btn btn-primary btn-sm shadow-sm mb-2">
+                                        <i class="bi bi-camera-video-fill me-2"></i>Masuk Room
+                                    </a>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary btn-sm mb-2" disabled>Menunggu Link</button>
+                                <?php endif; ?>
 
-    <?php 
-    // Debugging: Pastikan role benar
-    // var_dump($role, $row['status']); 
-    
-    if ($role == 'konselor' && $row['status'] == 'Terjadwal'): 
-    ?>
-        <a href="jadwal_konsultasi.php?aksi=selesai&id=<?php echo $row['id']; ?>" 
-           class="btn btn-outline-success btn-sm"
-           onclick="return confirm('Tandai sesi ini sebagai selesai?')">
-            <i class="bi bi-check-lg me-1"></i> Tandai Selesai
-        </a>
-    <?php endif; ?>
+                                <?php 
+                                
+                                if ($role == 'konselor' && $row['status'] == 'Terjadwal'): 
+                                ?>
+                                    <a href="jadwal_konsultasi.php?aksi=selesai&id=<?php echo $row['id']; ?>" 
+                                    class="btn btn-outline-success btn-sm"
+                                    onclick="return confirm('Tandai sesi ini sebagai selesai?')">
+                                        <i class="bi bi-check-lg me-1"></i> Tandai Selesai
+                                    </a>
+                                <?php endif; ?>
 
 
-    <?php if ($role == 'konselor'): ?>
-    <?php
-    // LOGIKA LAMA (SALAH):
-    // $p_gender = !empty($row['jenis_kelamin']) ? (($row['jenis_kelamin']=='L')?'Laki-laki':'Perempuan') : '-';
+                                <?php if ($role == 'konselor'): ?>
+                                <?php
+                                $kode_jk = $row['jenis_kelamin'];
+                                
+                                if ($kode_jk == 'L') {
+                                    $p_gender = 'Laki-laki';
+                                } elseif ($kode_jk == 'P') {
+                                    $p_gender = 'Perempuan';
+                                } elseif ($kode_jk == 'T') {
+                                    $p_gender = 'Tidak ingin memberi tahu';
+                                } else {
+                                    $p_gender = '-'; 
+                                }
 
-    // LOGIKA BARU (BENAR):
-    $kode_jk = $row['jenis_kelamin'];
-    
-    if ($kode_jk == 'L') {
-        $p_gender = 'Laki-laki';
-    } elseif ($kode_jk == 'P') {
-        $p_gender = 'Perempuan';
-    } elseif ($kode_jk == 'T') {
-        $p_gender = 'Tidak ingin memberi tahu';
-    } else {
-        $p_gender = '-'; // Jika data kosong
-    }
+                                $p_lahir = !empty($row['tanggal_lahir']) ? date('d M Y', strtotime($row['tanggal_lahir'])) : '-';
+                                
+                                $p_alamat = !empty($row['alamat']) ? $row['alamat'] : '-';
+                            ?>
 
-    // Format Tanggal Lahir
-    $p_lahir = !empty($row['tanggal_lahir']) ? date('d M Y', strtotime($row['tanggal_lahir'])) : '-';
-    
-    // Alamat
-    $p_alamat = !empty($row['alamat']) ? $row['alamat'] : '-';
-?>
+                                <div class="d-flex align-items-center">
+                                    <h5 class="fw-bold mb-1 me-2"><?php echo $nama_lawan; ?></h5>
+                                    
+                                    <a href="#" class="text-primary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalPasien"
+                                    data-id="<?php echo $row['user_id']; ?>"
+                                    data-nama="<?php echo $row['nama_pasien']; ?>"
+                                    data-email="<?php echo $row['email']; ?>"
+                                    data-gender="<?php echo $p_gender; ?>"
+                                    data-lahir="<?php echo $p_lahir; ?>"
+                                    data-alamat="<?php echo $p_alamat; ?>"
+                                    title="Lihat Profil Pasien">
+                                    <i class="bi bi-info-circle-fill"></i>
+                                    </a>
+                                </div>
 
-    <div class="d-flex align-items-center">
-        <h5 class="fw-bold mb-1 me-2"><?php echo $nama_lawan; ?></h5>
-        
-        <a href="#" class="text-primary" 
-           data-bs-toggle="modal" 
-           data-bs-target="#modalPasien"
-           data-id="<?php echo $row['user_id']; ?>"
-           data-nama="<?php echo $row['nama_pasien']; ?>"
-           data-email="<?php echo $row['email']; ?>"
-           data-gender="<?php echo $p_gender; ?>"
-           data-lahir="<?php echo $p_lahir; ?>"
-           data-alamat="<?php echo $p_alamat; ?>"
-           title="Lihat Profil Pasien">
-           <i class="bi bi-info-circle-fill"></i>
-        </a>
-    </div>
+                            <?php else: ?>
+                                <h5 class="fw-bold mb-1"><?php echo $nama_lawan; ?></h5>
+                            <?php endif; ?>
 
-<?php else: ?>
-    <h5 class="fw-bold mb-1"><?php echo $nama_lawan; ?></h5>
-<?php endif; ?>
-
-</div>
+                            </div>
 
                         </div>
                     </div>
@@ -238,6 +222,12 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
         </div>
     </div>
 </div>
+
+<footer class="bg-dark text-light py-4 mt-auto text-center">
+    <div class="container">
+        <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>
+    </div>
+</footer>
 
 <?php include 'components/modal_pasien.php'; ?>
 

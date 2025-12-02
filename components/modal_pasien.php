@@ -46,10 +46,8 @@
     const modalPasien = document.getElementById('modalPasien')
     if (modalPasien) {
         modalPasien.addEventListener('show.bs.modal', event => {
-            // Tangkap tombol pemicu
             const button = event.relatedTarget
             
-            // Ambil data
             const nama = button.getAttribute('data-nama')
             const email = button.getAttribute('data-email')
             const id = button.getAttribute('data-id')
@@ -57,10 +55,8 @@
             const lahir = button.getAttribute('data-lahir')
             const alamat = button.getAttribute('data-alamat')
             
-            // Generate Gambar Avatar
             const fotoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=random&color=fff`;
 
-            // Isi Modal
             modalPasien.querySelector('#pNama').textContent = nama
             modalPasien.querySelector('#pEmail').textContent = email
             modalPasien.querySelector('#pFoto').src = fotoUrl

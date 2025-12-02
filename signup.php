@@ -1,3 +1,14 @@
+<?php
+session_start();
+include 'koneksi.php';
+
+if (isset($_SESSION['status']) && ($_SESSION['role'] == 'konselor' || $_SESSION['role'] == 'pasien' || $_SESSION['role'] == 'admin')) {
+    header("location: index.php");
+    exit;
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -14,7 +25,7 @@
             
             <div class="card-body">
                 <div class="mb-3">
-                    <a href="index.html" class="text-decoration-none text-secondary small">
+                    <a href="index.php" class="text-decoration-none text-secondary small">
                         &larr; Kembali ke Beranda
                     </a>
                 </div>
@@ -27,8 +38,8 @@
                 <form action="signup_process.php" method="POST">
                     
                     <div class="mb-3">
-                        <label for="username" class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Nama lengkap Anda" required>
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Username Anda" required>
                     </div>
 
                     <div class="mb-3">
@@ -38,7 +49,7 @@
 
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Minimal 6 karakter" required>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="******" required>
                     </div>
 
                     <div class="mb-3">

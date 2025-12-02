@@ -19,11 +19,12 @@
                     <tr>
                         <th>Hari</th>
                         <th>Jam</th>
-                        <th width="30%">Aksi</th>
+                        <th>Harga</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="isiTabelJadwal">
-                    <tr><td colspan="3">Memuat jadwal...</td></tr>
+                    <tr><td colspan="4">Memuat jadwal...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -36,25 +37,20 @@
     const modalJadwal = document.getElementById('modalJadwal')
     if (modalJadwal) {
         modalJadwal.addEventListener('show.bs.modal', event => {
-            // 1. Tangkap data dari tombol
             const button = event.relatedTarget
-            const id = button.getAttribute('data-id') // User ID Konselor (misal: DOC-01)
+            const id = button.getAttribute('data-id')
             const nama = button.getAttribute('data-nama')
             const spesialis = button.getAttribute('data-spesialis')
 
-            // 2. Update Judul Modal
             modalJadwal.querySelector('#modalNamaKonselor').textContent = nama
             modalJadwal.querySelector('#modalSpesialisasi').textContent = spesialis
             
-            // 3. PANGGIL DATA JADWAL VIA AJAX (FETCH)
             const tbody = modalJadwal.querySelector('#isiTabelJadwal');
-            tbody.innerHTML = '<tr><td colspan="3" class="py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
 
-            // Panggil file PHP yang baru kita buat
             fetch('get_jadwal.php?id=' + id)
                 .then(response => response.text())
                 .then(data => {
-                    // Masukkan hasil HTML dari PHP ke dalam tbody
                     tbody.innerHTML = data;
                 })
                 .catch(error => {

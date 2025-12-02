@@ -2,22 +2,17 @@
 session_start(); 
 
 
-$konselor_id = isset($_GET['konselor_id']) ? $_GET['konselor_id'] : ''; // Tangkap ID
-// ... (variabel lain sama)
+$konselor_id = isset($_GET['konselor_id']) ? $_GET['konselor_id'] : ''; 
 
-
-// Cek Login (Wajib Login buat bayar)
 if (!isset($_SESSION['status']) || $_SESSION['status'] != 'login') {
-    echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='login.html';</script>";
+    echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='login.php';</script>";
     exit;
 }
 
-// Tangkap Data dari URL (Metode GET)
 $dokter = isset($_GET['dokter']) ? $_GET['dokter'] : '-';
 $hari   = isset($_GET['hari']) ? $_GET['hari'] : '-';
 $jam    = isset($_GET['jam']) ? $_GET['jam'] : '-';
 
-// TANGKAP HARGA DARI URL
 $harga  = isset($_GET['harga']) ? $_GET['harga'] : 150000;
 ?>
 <!DOCTYPE html>

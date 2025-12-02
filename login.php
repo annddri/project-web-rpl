@@ -1,4 +1,13 @@
+<?php
+session_start();
+include 'koneksi.php';
 
+if (isset($_SESSION['status']) && ($_SESSION['role'] == 'konselor' || $_SESSION['role'] == 'pasien' || $_SESSION['role'] == 'admin')) {
+    header("location: index.php");
+    exit;
+}
+
+?>
 
 <!DOCTYPE html>
 <html lang="id">

@@ -4,13 +4,12 @@ include 'koneksi.php';
 
 // 1. Cek Login
 if (!isset($_SESSION['status']) || $_SESSION['status'] != 'login') {
-    header("location: login.html");
+    header("location: login.php");
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
 
-// 2. LOGIKA UPDATE DATA (Jika tombol Simpan ditekan)
 if (isset($_POST['simpan'])) {
     $nama          = mysqli_real_escape_string($conn, $_POST['nama']);
     $username      = mysqli_real_escape_string($conn, $_POST['username']);
@@ -18,7 +17,14 @@ if (isset($_POST['simpan'])) {
     $tanggal_lahir = $_POST['tanggal_lahir'];
     $alamat        = mysqli_real_escape_string($conn, $_POST['alamat']);
 
-    // Query Update (Email tidak diupdate)
+$check_query = "SELECT * FROM users WHERE username = '$username'";
+$check_result = mysqli_query($conn, $check_query);
+
+if (mysqli_num_rows($check_result) > 0) {
+    echo "<script>alert('Username sudah terdaftar!'); window.location.href='profil.php';</script>";
+    exit;
+}
+
     $query_update = "UPDATE users SET 
                      nama = '$nama',
                      username = '$username',
@@ -28,7 +34,6 @@ if (isset($_POST['simpan'])) {
                      WHERE user_id = '$user_id'";
 
     if (mysqli_query($conn, $query_update)) {
-        // Update Session Nama & Username agar tampilan di navbar langsung berubah
         $_SESSION['nama'] = $nama;
         $_SESSION['username'] = $username;
         
@@ -38,7 +43,6 @@ if (isset($_POST['simpan'])) {
     }
 }
 
-// 3. AMBIL DATA USER TERBARU
 $query = "SELECT * FROM users WHERE user_id = '$user_id'";
 $result = mysqli_query($conn, $query);
 $d = mysqli_fetch_assoc($result);

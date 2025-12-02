@@ -2,87 +2,224 @@
 session_start();
 include 'koneksi.php';
 
-// CEK AKSES ADMIN
+// Cek Admin
 if (!isset($_SESSION['status']) || $_SESSION['role'] != 'admin') {
-    header("location: login.html");
+    header("location: login.php"); // Pastikan arahnya ke login.php bukan login.html
     exit;
 }
 
-// --- LOGIKA CRUD USER ---
+// -----------------------------------------------------------
+// 1. LOGIC PHP BARU: UPDATE ROLE USER
+// -----------------------------------------------------------
+if (isset($_POST['update_role_user'])) {
+    $uid = $_POST['user_id'];
+    $new_role = $_POST['role_baru'];
+    
+    // Update query
+    $update = mysqli_query($conn, "UPDATE users SET role='$new_role' WHERE user_id='$uid'");
+    
+    if ($update) {
+        echo "<script>alert('Role pengguna berhasil diubah!'); window.location.href='admin_panel.php';</script>";
+    } else {
+        echo "<script>alert('Gagal mengubah role.'); window.location.href='admin_panel.php';</script>";
+    }
+}
+
+// Logic Hapus User
 if (isset($_GET['hapus_user'])) {
     $uid = $_GET['hapus_user'];
     mysqli_query($conn, "DELETE FROM users WHERE user_id='$uid'");
     echo "<script>alert('User dihapus'); window.location.href='admin_panel.php';</script>";
 }
 
-// --- LOGIKA APPROVAL PROFIL ---
+
 if (isset($_POST['approve_profil'])) {
     $id_pengajuan = $_POST['id_pengajuan'];
     
-    // 1. Ambil Data Baru dari Pengajuan
+    // 1. Ambil Data dari Pengajuan
     $q_ambil = mysqli_query($conn, "SELECT * FROM pengajuan_profil WHERE id='$id_pengajuan'");
     $data = mysqli_fetch_assoc($q_ambil);
     $uid = $data['user_id'];
 
-    // 2. Update Tabel Users
-    mysqli_query($conn, "UPDATE users SET nama='".$data['nama_baru']."', spesialisasi='".$data['spesialisasi_baru']."' WHERE user_id='$uid'");
+    // 2. Update Tabel Induk (USERS) - Hanya Nama
+    // (Spesialisasi sebaiknya masuk ke tabel profil, tapi jika di DB Anda ada di users, biarkan di sini)
+    $nama_baru = mysqli_real_escape_string($conn, $data['nama_baru']);
+    mysqli_query($conn, "UPDATE users SET nama='$nama_baru' WHERE user_id='$uid'");
 
-    // 3. Update Tabel Konselor Profil (Cek dulu ada/nggak)
-    $cek = mysqli_query($conn, "SELECT * FROM konselor_profil WHERE user_id='$uid'");
-    if (mysqli_num_rows($cek) > 0) {
-        $sql_prof = "UPDATE konselor_profil SET pendidikan='".$data['pendidikan_baru']."', nomor_str='".$data['str_baru']."', metode_terapi='".$data['metode_baru']."', bahasa='".$data['bahasa_baru']."', tentang_saya='".$data['tentang_baru']."' WHERE user_id='$uid'";
-    } else {
-        $sql_prof = "INSERT INTO konselor_profil (user_id, pendidikan, nomor_str, metode_terapi, bahasa, tentang_saya) VALUES ('$uid', '".$data['pendidikan_baru']."', '".$data['str_baru']."', '".$data['metode_baru']."', '".$data['bahasa_baru']."', '".$data['tentang_baru']."')";
+    // 3. Siapkan Data Profil
+    $spesialisasi = mysqli_real_escape_string($conn, $data['spesialisasi_baru']);
+    $pendidikan   = mysqli_real_escape_string($conn, $data['pendidikan_baru']);
+    $str          = mysqli_real_escape_string($conn, $data['str_baru']);
+    $metode       = mysqli_real_escape_string($conn, $data['metode_baru']);
+    $bahasa       = mysqli_real_escape_string($conn, $data['bahasa_baru']);
+    $tentang      = mysqli_real_escape_string($conn, $data['tentang_baru']);
+    
+    // 4. LOGIC FOTO (PENTING)
+    $sql_foto = ""; // String tambahan untuk query update
+    $val_foto = ""; // String tambahan untuk query insert
+    $col_foto = ""; // Kolom tambahan untuk query insert
+
+    // Cek apakah user mengajukan foto baru?
+    if (!empty($data['foto'])) {
+        $foto_baru = $data['foto'];
+        
+        // Cari foto lama untuk dihapus
+        $cek_lama = mysqli_query($conn, "SELECT foto FROM konselor_profil WHERE user_id='$uid'");
+        $d_lama = mysqli_fetch_assoc($cek_lama);
+        
+        // Hapus foto lama dari folder jika ada dan bukan default
+        if ($d_lama && !empty($d_lama['foto']) && $d_lama['foto'] != 'default.jpg') {
+            if (file_exists("img/" . $d_lama['foto'])) {
+                unlink("img/" . $d_lama['foto']);
+            }
+        }
+
+        // Siapkan potongan query untuk update/insert
+        $sql_foto = ", foto='$foto_baru'";
+        $col_foto = ", foto";
+        $val_foto = ", '$foto_baru'";
     }
-    mysqli_query($conn, $sql_prof);
 
-    // 4. Set Status jadi Disetujui
-    mysqli_query($conn, "UPDATE pengajuan_profil SET status='Disetujui' WHERE id='$id_pengajuan'");
-    echo "<script>alert('Profil Disetujui & Diupdate!'); window.location.href='admin_panel.php';</script>";
+    // 5. Cek apakah Data Profil sudah ada?
+    $cek = mysqli_query($conn, "SELECT id FROM konselor_profil WHERE user_id='$uid'");
+    
+    if (mysqli_num_rows($cek) > 0) {
+        // UPDATE Existing Profil
+        // Perhatikan: $sql_foto ditambahkan di sini
+        $sql_prof = "UPDATE konselor_profil SET 
+                     pendidikan='$pendidikan', 
+                     nomor_str='$str', 
+                     metode_terapi='$metode', 
+                     bahasa='$bahasa', 
+                     tentang_saya='$tentang' 
+                     $sql_foto 
+                     WHERE user_id='$uid'";
+        $sql_users = "UPDATE users SET 
+                     spesialisasi='$spesialisasi'
+                     WHERE user_id='$uid'";
+    } else {
+        // INSERT New Profil
+        // Perhatikan: $col_foto dan $val_foto ditambahkan di sini
+        $sql_prof = "INSERT INTO konselor_profil 
+                     (user_id, pendidikan, nomor_str, metode_terapi, bahasa, tentang_saya $col_foto) 
+                     VALUES 
+                     ('$uid', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang' $val_foto)";
+        
+    }
+    
+    if (isset($sql_users)) {
+            mysqli_query($conn, $sql_users);
+        }
+
+    // Eksekusi Update Profil
+    if (mysqli_query($conn, $sql_prof)) {
+        // 6. Tandai Pengajuan sebagai Disetujui
+        mysqli_query($conn, "UPDATE pengajuan_profil SET status='Disetujui' WHERE id='$id_pengajuan'");
+        echo "<script>alert('Profil berhasil disetujui dan diperbarui!'); window.location.href='admin_panel.php';</script>";
+    } else {
+        echo "<script>alert('Gagal update profil: " . mysqli_error($conn) . "');</script>";
+    }
+
+    // ... (Logika validasi upload foto baru sudah berhasil) ...
+
+if (move_uploaded_file($foto_tmp, $target_dir . $foto_baru)) {
+    
+    // === [MULAI BAGIAN HAPUS FOTO LAMA] ===
+    
+    // 1. Cari dulu nama foto lama di database
+    $q_cek_lama = mysqli_query($conn, "SELECT foto FROM pengajuan_profil WHERE user_id='$uid'");
+    $d_cek_lama = mysqli_fetch_assoc($q_cek_lama);
+    $foto_lama_db = $d_cek_lama['foto'];
+
+    // 2. Cek apakah foto lama itu ada? Dan BUKAN foto default?
+    // (Kita jangan hapus 'default.jpg' karena itu dipakai banyak orang)
+    if (!empty($foto_lama_db) && $foto_lama_db != 'default.jpg') {
+        
+        $path_file_lama = "img/" . $foto_lama_db;
+        
+        // 3. Cek apakah file fisiknya beneran ada di folder img?
+        if (file_exists($path_file_lama)) {
+            // 4. HAPUS FILE!
+            unlink($path_file_lama);
+        }
+    }
+}
 }
 
-// --- LOGIKA APPROVAL JADWAL (BARU) ---
+
+// Logic Approve Jadwal
 if (isset($_GET['approve_jadwal'])) {
     $id_aj = $_GET['approve_jadwal'];
-    
-    // 1. Ambil data dari tabel pengajuan
     $q_data = mysqli_query($conn, "SELECT * FROM pengajuan_jadwal WHERE id='$id_aj'");
     $d = mysqli_fetch_assoc($q_data);
     
-    // 2. Masukkan ke tabel jadwal_praktik (RESMI)
     $q_resmi = "INSERT INTO jadwal_praktik (user_id, hari, jam_mulai, jam_selesai, harga) 
                 VALUES ('".$d['user_id']."', '".$d['hari']."', '".$d['jam_mulai']."', '".$d['jam_selesai']."', '".$d['harga']."')";
     mysqli_query($conn, $q_resmi);
-
-    // 3. Update status pengajuan jadi Disetujui
     mysqli_query($conn, "UPDATE pengajuan_jadwal SET status='Disetujui' WHERE id='$id_aj'");
-    
     echo "<script>alert('Jadwal Disetujui & Ditayangkan!'); window.location.href='admin_panel.php';</script>";
 }
 
+// Logic Reject Jadwal
 if (isset($_GET['reject_jadwal'])) {
     $id_aj = $_GET['reject_jadwal'];
     mysqli_query($conn, "UPDATE pengajuan_jadwal SET status='Ditolak' WHERE id='$id_aj'");
     echo "<script>alert('Jadwal Ditolak.'); window.location.href='admin_panel.php';</script>";
 }
 
+// Logic Reject Profil
 if (isset($_GET['reject_profil'])) {
     $id = $_GET['reject_profil'];
+    
+    // 1. AMBIL DATA DULU (Cari nama fotonya)
+    $q_cek = mysqli_query($conn, "SELECT foto FROM pengajuan_profil WHERE id='$id'");
+    $d_cek = mysqli_fetch_assoc($q_cek);
+    
+    // 2. HAPUS FILE FISIK (Jika ada foto yang diajukan)
+    if ($d_cek && !empty($d_cek['foto'])) {
+        $path_file = "img/" . $d_cek['foto'];
+        
+        // Cek apakah file ada di folder sebelum dihapus
+        if (file_exists($path_file)) {
+            unlink($path_file); // Hapus file dari folder img
+        }
+    }
+
+    // 3. BARU UPDATE STATUS DI DATABASE
     mysqli_query($conn, "UPDATE pengajuan_profil SET status='Ditolak' WHERE id='$id'");
-    echo "<script>alert('Pengajuan Ditolak.'); window.location.href='admin_panel.php';</script>";
+    
+    echo "<script>alert('Pengajuan Ditolak. File foto pengajuan (jika ada) telah dihapus dari server.'); window.location.href='admin_panel.php';</script>";
 }
 
-// --- LOGIKA EDUKASI ---
-if (isset($_POST['tambah_edukasi'])) {
-    $judul = $_POST['judul'];
-    $kategori = $_POST['kategori'];
-    $penulis = $_POST['penulis'];
-    $gambar = $_POST['gambar'];
+// Logic Tambah Edukasi
+if (isset($_POST['simpan_edukasi'])) {
+    $mode = $_POST['mode'];
+    $judul = mysqli_real_escape_string($conn, $_POST['judul']);
+    $kategori = mysqli_real_escape_string($conn, $_POST['kategori']);
+    $penulis = mysqli_real_escape_string($conn, $_POST['penulis']);
+    $gambar = mysqli_real_escape_string($conn, $_POST['gambar']);
     $isi = mysqli_real_escape_string($conn, $_POST['isi']);
+
+    if ($mode == 'tambah') {
+        // QUERY INSERT
+        $query = "INSERT INTO edukasi (judul, kategori, penulis, gambar_url, isi_konten) 
+                  VALUES ('$judul', '$kategori', '$penulis', '$gambar', '$isi')";
+        $pesan = "Konten berhasil ditambahkan!";
+    } else {
+        // QUERY UPDATE
+        $id = $_POST['id_edu'];
+        $query = "UPDATE edukasi SET 
+                  judul='$judul', kategori='$kategori', penulis='$penulis', 
+                  gambar_url='$gambar', isi_konten='$isi' 
+                  WHERE id='$id'";
+        $pesan = "Konten berhasil diperbarui!";
+    }
     
-    mysqli_query($conn, "INSERT INTO edukasi (judul, kategori, penulis, gambar_url, isi_konten) VALUES ('$judul', '$kategori', '$penulis', '$gambar', '$isi')");
-    echo "<script>alert('Konten ditambahkan!'); window.location.href='admin_panel.php';</script>";
+    mysqli_query($conn, $query);
+    echo "<script>alert('$pesan'); window.location.href='admin_panel.php';</script>";
 }
+
+// Logic Hapus Edukasi
 if (isset($_GET['hapus_edukasi'])) {
     $id = $_GET['hapus_edukasi'];
     mysqli_query($conn, "DELETE FROM edukasi WHERE id='$id'");
@@ -95,7 +232,7 @@ if (isset($_GET['hapus_edukasi'])) {
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel - Stark Hope</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body class="bg-light">
@@ -129,6 +266,7 @@ if (isset($_GET['hapus_edukasi'])) {
 
     <div class="tab-content" id="pills-tabContent">
         
+        <!-- TAB DATA USERS -->
         <div class="tab-pane fade show active" id="pills-users">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white fw-bold">Master Data Users</div>
@@ -147,7 +285,6 @@ if (isset($_GET['hapus_edukasi'])) {
                             </thead>
                             <tbody>
                                 <?php
-                                // Tambahkan WHERE role != 'admin'
                                 $q_users = mysqli_query($conn, "SELECT * FROM users WHERE role != 'admin' ORDER BY role");
                                 while($u = mysqli_fetch_assoc($q_users)):
                                 ?>
@@ -155,9 +292,23 @@ if (isset($_GET['hapus_edukasi'])) {
                                     <td><?php echo $u['user_id']; ?></td>
                                     <td><?php echo $u['nama']; ?></td>
                                     <td><?php echo $u['email']; ?></td>
-                                    <td><span class="badge <?php echo ($u['role']=='admin'?'bg-danger':($u['role']=='konselor'?'bg-primary':'bg-secondary')); ?>"><?php echo strtoupper($u['role']); ?></span></td>
+                                    <td>
+                                        <span class="badge <?php echo ($u['role']=='admin'?'bg-danger':($u['role']=='konselor'?'bg-primary':'bg-secondary')); ?>">
+                                            <?php echo strtoupper($u['role']); ?>
+                                        </span>
+                                    </td>
                                     <td><?php echo $u['status']; ?></td>
                                     <td>
+                                        <!-- 2. TOMBOL EDIT ROLE -->
+                                        <button type="button" class="btn btn-warning btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalEditRole"
+                                            data-id="<?php echo $u['user_id']; ?>"
+                                            data-nama="<?php echo $u['nama']; ?>"
+                                            data-role="<?php echo $u['role']; ?>">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+
                                         <a href="admin_panel.php?hapus_user=<?php echo $u['user_id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus user ini?')"><i class="bi bi-trash"></i></a>
                                     </td>
                                 </tr>
@@ -169,8 +320,8 @@ if (isset($_GET['hapus_edukasi'])) {
             </div>
         </div>
 
-<div class="tab-pane fade" id="pills-approval">
-            
+        <!-- TAB APPROVAL (Tidak ada perubahan) -->
+        <div class="tab-pane fade" id="pills-approval">
             <h5 class="fw-bold mb-3 text-primary">Pengajuan Profil Baru</h5>
             <div class="row mb-5">
                 <?php
@@ -219,7 +370,6 @@ if (isset($_GET['hapus_edukasi'])) {
                             <p class="text-center text-muted small mb-3">
                                 Tarif: Rp <?php echo number_format($j['harga']); ?>
                             </p>
-                            
                             <div class="d-flex gap-2">
                                 <a href="admin_panel.php?approve_jadwal=<?php echo $j['id']; ?>" class="btn btn-success btn-sm w-100" onclick="return confirm('Setujui jadwal ini?')">Acc</a>
                                 <a href="admin_panel.php?reject_jadwal=<?php echo $j['id']; ?>" class="btn btn-danger btn-sm w-100">Tolak</a>
@@ -231,45 +381,96 @@ if (isset($_GET['hapus_edukasi'])) {
                     <div class="col-12"><div class="alert alert-light border">Tidak ada pengajuan jadwal.</div></div>
                 <?php endif; ?>
             </div>
-
         </div>
 
+        <!-- TAB KELOLA EDUKASI (Tidak ada perubahan) -->
+        <!-- === TAB 3: KELOLA EDUKASI (DENGAN FITUR EDIT) === -->
         <div class="tab-pane fade" id="pills-edu">
+            
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white fw-bold">Tambah Konten Baru</div>
+                <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                    <span id="formTitle">Tambah Konten Baru</span>
+                    <!-- Tombol Reset untuk membatalkan mode edit -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnReset" onclick="resetForm()">Batal Edit</button>
+                </div>
                 <div class="card-body">
                     <form method="POST">
+                        <!-- Input Hidden untuk ID (Penting untuk Edit) -->
+                        <input type="hidden" name="id_edu" id="inputIdEdu">
+                        
+                        <!-- Input Hidden untuk Penanda Mode (tambah/edit) -->
+                        <input type="hidden" name="mode" id="inputMode" value="tambah">
+
                         <div class="row">
-                            <div class="col-md-6 mb-2"><input type="text" name="judul" class="form-control" placeholder="Judul Artikel" required></div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label small fw-bold">Judul</label>
+                                <input type="text" name="judul" id="inputJudul" class="form-control" placeholder="Judul Artikel" required>
+                            </div>
                             <div class="col-md-3 mb-2">
-                                <select name="kategori" class="form-select">
+                                <label class="form-label small fw-bold">Kategori</label>
+                                <select name="kategori" id="inputKategori" class="form-select">
                                     <option value="Artikel">Artikel</option>
                                     <option value="Video">Video</option>
                                     <option value="Kisah Nyata">Kisah Nyata</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 mb-2"><input type="text" name="penulis" class="form-control" placeholder="Penulis" required></div>
-                            <div class="col-md-12 mb-2"><input type="text" name="gambar" class="form-control" placeholder="URL Gambar (https://...)" required></div>
-                            <div class="col-md-12 mb-2"><textarea name="isi" class="form-control" rows="3" placeholder="Isi Konten (Boleh HTML)" required></textarea></div>
-                            <div class="col-md-12"><button type="submit" name="tambah_edukasi" class="btn btn-primary">Publish Konten</button></div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small fw-bold">Penulis</label>
+                                <input type="text" name="penulis" id="inputPenulis" class="form-control" placeholder="Penulis" required>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label small fw-bold">URL Gambar</label>
+                                <input type="text" name="gambar" id="inputGambar" class="form-control" placeholder="https://..." required>
+                            </div>
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label small fw-bold">Isi Konten</label>
+                                <textarea name="isi" id="inputIsi" class="form-control" rows="5" placeholder="Isi Konten (Boleh HTML)" required></textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <button type="submit" name="simpan_edukasi" id="btnSubmit" class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i> Publish Konten
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
 
             <div class="table-responsive bg-white p-3 rounded shadow-sm">
-                <table class="table table-striped small">
-                    <thead><tr><th>Judul</th><th>Kategori</th><th>Penulis</th><th>Aksi</th></tr></thead>
+                <table class="table table-striped small align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Judul</th>
+                            <th>Kategori</th>
+                            <th>Penulis</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php
                         $q_edu = mysqli_query($conn, "SELECT * FROM edukasi ORDER BY id DESC");
                         while($e = mysqli_fetch_assoc($q_edu)):
+                            // Kita siapkan data JSON untuk tombol edit agar aman dari karakter aneh (kutip/enter)
+                            $data_json = htmlspecialchars(json_encode($e), ENT_QUOTES, 'UTF-8');
                         ?>
                         <tr>
-                            <td><?php echo $e['judul']; ?></td>
-                            <td><?php echo $e['kategori']; ?></td>
+                            <td class="fw-bold"><?php echo $e['judul']; ?></td>
+                            <td><span class="badge bg-secondary"><?php echo $e['kategori']; ?></span></td>
                             <td><?php echo $e['penulis']; ?></td>
-                            <td><a href="admin_panel.php?hapus_edukasi=<?php echo $e['id']; ?>" class="text-danger" onclick="return confirm('Hapus?')"><i class="bi bi-trash-fill"></i></a></td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <!-- TOMBOL EDIT -->
+                                    <!-- Saat diklik, panggil fungsi editKonten() dengan data baris ini -->
+                                    <button type="button" class="btn btn-warning btn-sm text-white" onclick='editKonten(<?php echo $data_json; ?>)'>
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    
+                                    <!-- TOMBOL HAPUS -->
+                                    <a href="admin_panel.php?hapus_edukasi=<?php echo $e['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus konten ini?')">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -277,9 +478,113 @@ if (isset($_GET['hapus_edukasi'])) {
             </div>
         </div>
 
+
+
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ============================================= -->
+<!-- 3. MODAL EDIT ROLE (POP-UP)                   -->
+<!-- ============================================= -->
+<div class="modal fade" id="modalEditRole" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Ubah Role User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST">
+          <div class="modal-body">
+            <!-- Hidden input untuk menyimpan ID user yang sedang diedit -->
+            <input type="hidden" name="user_id" id="editUserId">
+            
+            <div class="mb-3">
+                <label class="form-label">Nama User</label>
+                <input type="text" class="form-control" id="editUserNama" readonly>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Pilih Role Baru</label>
+                <select name="role_baru" class="form-select" id="editUserRole">
+                    <option value="pasien">Pasien</option>
+                    <option value="konselor">Konselor</option>
+                    <!-- Tambahkan opsi 'admin' jika diperlukan, tapi hati-hati -->
+                </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" name="update_role_user" class="btn btn-primary">Simpan Perubahan</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 4. JAVASCRIPT UNTUK MEMINDAHKAN DATA KE MODAL -->
+<script>
+    const modalEditRole = document.getElementById('modalEditRole');
+    if (modalEditRole) {
+        modalEditRole.addEventListener('show.bs.modal', event => {
+            // Tombol yang diklik
+            const button = event.relatedTarget;
+            
+            // Ambil data dari atribut tombol
+            const id = button.getAttribute('data-id');
+            const nama = button.getAttribute('data-nama');
+            const role = button.getAttribute('data-role');
+            
+            // Isi ke dalam input modal
+            modalEditRole.querySelector('#editUserId').value = id;
+            modalEditRole.querySelector('#editUserNama').value = nama;
+            modalEditRole.querySelector('#editUserRole').value = role;
+        })
+    }
+</script>
+
+<!-- SCRIPT JAVASCRIPT KHUSUS UNTUK FITUR EDIT -->
+<script>
+function editKonten(data) {
+    // 1. Ubah Judul Form & Tombol
+    document.getElementById('formTitle').innerText = "Edit Konten";
+    document.getElementById('btnSubmit').innerHTML = "<i class='bi bi-save me-1'></i> Simpan Perubahan";
+    document.getElementById('btnSubmit').classList.replace('btn-primary', 'btn-success');
+    document.getElementById('btnReset').classList.remove('d-none'); // Munculkan tombol batal
+
+    // 2. Isi Form dengan Data
+    document.getElementById('inputIdEdu').value = data.id;
+    document.getElementById('inputMode').value = 'edit'; // Mode berubah jadi EDIT
+    
+    document.getElementById('inputJudul').value = data.judul;
+    document.getElementById('inputKategori').value = data.kategori;
+    document.getElementById('inputPenulis').value = data.penulis;
+    document.getElementById('inputGambar').value = data.gambar_url;
+    document.getElementById('inputIsi').value = data.isi_konten;
+
+    // 3. Scroll ke atas agar admin sadar form sudah terisi
+    document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+    // 1. Kembalikan Judul & Tombol ke kondisi awal (Tambah)
+    document.getElementById('formTitle').innerText = "Tambah Konten Baru";
+    document.getElementById('btnSubmit').innerHTML = "<i class='bi bi-plus-lg me-1'></i> Publish Konten";
+    document.getElementById('btnSubmit').classList.replace('btn-success', 'btn-primary');
+    document.getElementById('btnReset').classList.add('d-none');
+
+    // 2. Kosongkan Form
+    document.getElementById('inputIdEdu').value = '';
+    document.getElementById('inputMode').value = 'tambah';
+    
+    document.getElementById('inputJudul').value = '';
+    document.getElementById('inputKategori').value = 'Artikel';
+    document.getElementById('inputPenulis').value = '';
+    document.getElementById('inputGambar').value = '';
+    document.getElementById('inputIsi').value = '';
+}
+</script>
+
 </body>
 </html>

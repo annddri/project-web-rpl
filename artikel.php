@@ -1,6 +1,6 @@
 <?php 
 session_start(); 
-include 'koneksi.php'; // WAJIB ADA
+include 'koneksi.php';
 ?>
 
 <!DOCTYPE html>
@@ -15,36 +15,41 @@ include 'koneksi.php'; // WAJIB ADA
 </head>
 <body>
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
   <div class="container">
+    
     <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+    
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link active fw-bold" href="artikel.php">Pusat Edukasi</a></li>
-      </ul>
-      <div class="d-flex align-items-center gap-3">
+        <li class="nav-item"><a class="nav-link" href="konselor.php">Cari Konselor</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Pusat Edukasi</a></li>
         <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <span class="fw-bold text-primary me-2 d-none d-md-block"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=0D6EFD&color=fff" class="rounded-circle" width="35">
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="profil.php">Profil</a></li>
-                    <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
-                </ul>
-            </div>
-        <?php else: ?>
-            <a href="login.html" class="btn btn-outline-primary">Masuk</a>
+            <li class="nav-item"><a class="nav-link" href="jadwal_konsultasi.php">Jadwal Konsultasi</a></li>
         <?php endif; ?>
+      </ul>
+
+      <div class="d-flex align-items-center gap-3">
+        
+        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+
+        <?php else: ?>
+            <a href="signup.php" class="btn btn-primary">Daftar</a>
+            <a href="login.php" class="btn btn-outline-primary">Masuk</a>
+        <?php endif; ?>
+
       </div>
+      
     </div>
   </div>
 </nav>
+<!-- END NAVBAR -->
 
 <header class="bg-dark text-white py-5">
     <div class="container text-center">
@@ -57,21 +62,17 @@ include 'koneksi.php'; // WAJIB ADA
     <div class="row g-4">
         
         <?php 
-        // 1. QUERY KE DATABASE (Mengambil data yang diinput Admin)
         $query = "SELECT * FROM edukasi ORDER BY id DESC";
         $result = mysqli_query($conn, $query);
 
         if(mysqli_num_rows($result) > 0):
             while($row = mysqli_fetch_assoc($result)):
                 
-                // Logika Warna Badge Berdasarkan Kategori
                 $kategori = $row['kategori'];
-                $bg_color = 'primary'; // Default Biru (Artikel)
-                if ($kategori == 'Video') $bg_color = 'danger'; // Merah
-                if ($kategori == 'Kisah Nyata') $bg_color = 'success'; // Hijau
+                $bg_color = 'primary'; 
+                if ($kategori == 'Video') $bg_color = 'danger'; 
+                if ($kategori == 'Kisah Nyata') $bg_color = 'success'; 
 
-                // Buat Deskripsi Singkat (Potong teks isi konten)
-                // strip_tags: Menghilangkan tag HTML (<p>, <br>) biar rapi
                 $deskripsi_pendek = substr(strip_tags($row['isi_konten']), 0, 100) . '...';
         ?>
         
@@ -115,7 +116,7 @@ include 'koneksi.php'; // WAJIB ADA
 
 <footer class="bg-dark text-light py-4 mt-auto text-center">
     <div class="container">
-        <p class="small text-white-50 mb-0">&copy; 2024 Stark Hope Indonesia.</p>
+        <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>
     </div>
 </footer>
 

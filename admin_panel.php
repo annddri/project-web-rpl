@@ -45,54 +45,37 @@ if (isset($_POST['approve_profil'])) {
     $metode       = mysqli_real_escape_string($conn, $data['metode_baru']);
     $bahasa       = mysqli_real_escape_string($conn, $data['bahasa_baru']);
     $tentang      = mysqli_real_escape_string($conn, $data['tentang_baru']);
-    
-    // LOGIC FOTO
-    $sql_foto = "";
-    $val_foto = "";
-    $col_foto = "";
+    $foto      = mysqli_real_escape_string($conn, $data['foto']);
+    if ($foto == 'default.jpg') {
+        $cek_konselor = mysqli_query($conn, "SELECT foto FROM konselor_profil WHERE user_id='$uid'");
+        $k_lama = mysqli_fetch_assoc($cek_konselor);
 
-    if (!empty($data['foto'])) {
-        $foto_baru = $data['foto'];
-        
-        $cek_lama = mysqli_query($conn, "SELECT foto FROM konselor_profil WHERE user_id='$uid'");
-        $d_lama = mysqli_fetch_assoc($cek_lama);
-        
-        if ($d_lama && !empty($d_lama['foto']) && $d_lama['foto'] != 'default.jpg') {
-            if (file_exists("img/" . $d_lama['foto'])) {
-                unlink("img/" . $d_lama['foto']);
-            }
-        }
-
-        $sql_foto = ", foto='$foto_baru'";
-        $col_foto = ", foto";
-        $val_foto = ", '$foto_baru'";
-    }
-
-    $cek = mysqli_query($conn, "SELECT id FROM konselor_profil WHERE user_id='$uid'");
-    
-    if (mysqli_num_rows($cek) > 0) {
-        $sql_prof = "UPDATE konselor_profil SET 
-                    pendidikan='$pendidikan', 
-                    nomor_str='$str', 
-                    metode_terapi='$metode', 
-                    bahasa='$bahasa', 
-                    tentang_saya='$tentang' 
-                    $sql_foto 
-                    WHERE user_id='$uid'";
-        $sql_users = "UPDATE users SET 
-                    spesialisasi='$spesialisasi'
-                    WHERE user_id='$uid'";
-    } else {
-        $sql_prof = "INSERT INTO konselor_profil 
-                    (user_id, pendidikan, nomor_str, metode_terapi, bahasa, tentang_saya $col_foto) 
-                    VALUES 
-                    ('$uid', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang' $val_foto)";
-        
+        $foto = $k_lama['foto'];  
     }
     
-    if (isset($sql_users)) {
-            mysqli_query($conn, $sql_users);
-        }
+    $cek = mysqli_query($conn, "SELECT id FROM konselor_profil WHERE user_id='$uid'");  
+                    
+    if (mysqli_num_rows($cek) > 0) {                 
+        $sql_prof = "UPDATE konselor_profil SET                             
+        pendidikan='$pendidikan',                             
+        nomor_str='$str',                             
+        metode_terapi='$metode',                             
+        bahasa='$bahasa',                             
+        tentang_saya='$tentang',                             
+        foto='$foto'                             
+        WHERE user_id='$uid'";                 
+        $sql_users = "UPDATE users SET                             spesialisasi='$spesialisasi'                             
+        WHERE user_id='$uid'";             
+    } else {                 
+        $sql_prof = "INSERT INTO konselor_profil                             
+        (user_id, pendidikan, nomor_str, metode_terapi, bahasa, tentang_saya, foto)                             
+        VALUES                             
+        ('$uid', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang', '$foto')";                             
+    }         
+    
+    if (isset($sql_users)) {             
+        mysqli_query($conn, $sql_users);         
+    }
 
     if (mysqli_query($conn, $sql_prof)) {
         mysqli_query($conn, "UPDATE pengajuan_profil SET status='Disetujui' WHERE id='$id_pengajuan'");
@@ -100,24 +83,10 @@ if (isset($_POST['approve_profil'])) {
     } else {
         echo "<script>alert('Gagal update profil: " . mysqli_error($conn) . "');</script>";
     }
-
-
-    if (move_uploaded_file($foto_tmp, $target_dir . $foto_baru)) {
-        // HAPUS FOTO LAMA]
-        $q_cek_lama = mysqli_query($conn, "SELECT foto FROM pengajuan_profil WHERE user_id='$uid'");
-        $d_cek_lama = mysqli_fetch_assoc($q_cek_lama);
-        $foto_lama_db = $d_cek_lama['foto'];
-
-        if (!empty($foto_lama_db) && $foto_lama_db != 'default.jpg') {
-            
-            $path_file_lama = "img/" . $foto_lama_db;
-            
-            if (file_exists($path_file_lama)) {
-                unlink($path_file_lama);
-            }
-        }
-    }
 }
+
+    
+
 
 // Logic Approve Jadwal
 if (isset($_GET['approve_jadwal'])) {

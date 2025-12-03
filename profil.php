@@ -2,7 +2,6 @@
 session_start();
 include 'koneksi.php';
 
-// 1. Cek Login
 if (!isset($_SESSION['status']) || $_SESSION['status'] != 'login') {
     header("location: login.php");
     exit;
@@ -26,12 +25,12 @@ if (mysqli_num_rows($check_result) > 0) {
 }
 
     $query_update = "UPDATE users SET 
-                     nama = '$nama',
-                     username = '$username',
-                     jenis_kelamin = '$jenis_kelamin',
-                     tanggal_lahir = '$tanggal_lahir',
-                     alamat = '$alamat'
-                     WHERE user_id = '$user_id'";
+                    nama = '$nama',
+                    username = '$username',
+                    jenis_kelamin = '$jenis_kelamin',
+                    tanggal_lahir = '$tanggal_lahir',
+                    alamat = '$alamat'
+                    WHERE user_id = '$user_id'";
 
     if (mysqli_query($conn, $query_update)) {
         $_SESSION['nama'] = $nama;
@@ -60,16 +59,18 @@ $d = mysqli_fetch_assoc($result);
 </head>
 <body class="bg-light">
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm mb-4">
-  <div class="container">
-    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
-    <div class="d-flex gap-2">
-        <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali ke Beranda</a>
-        <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+        <div class="d-flex gap-2">
+            <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali ke Beranda</a>
+            <a href="logout.php" class="btn btn-danger btn-sm">Logout</a>
+        </div>
     </div>
-  </div>
 </nav>
 
+<!-- HALAMAN UTAMA -->
 <div class="container mb-5">
     <div class="row justify-content-center">
         
@@ -77,7 +78,7 @@ $d = mysqli_fetch_assoc($result);
             <div class="card border-0 shadow-sm text-center p-4 h-100">
                 <div class="mb-3">
                     <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($d['nama']); ?>&background=0D6EFD&color=fff&size=150" 
-                         class="rounded-circle shadow-sm" alt="Foto Profil">
+                        class="rounded-circle shadow-sm" alt="Foto Profil">
                 </div>
                 <h5 class="fw-bold"><?php echo $d['nama']; ?></h5>
                 <p class="text-muted small mb-1"><?php echo $d['email']; ?></p>

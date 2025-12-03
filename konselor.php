@@ -17,40 +17,40 @@ include 'koneksi.php';
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container">
-    
-    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link active" href="#">Cari Konselor</a></li>
-        <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
-        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
-            <li class="nav-item"><a class="nav-link" href="jadwal_konsultasi.php">Jadwal Konsultasi</a></li>
-        <?php endif; ?>
-      </ul>
-
-      <div class="d-flex align-items-center gap-3">
+    <div class="container">
         
-        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+        <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link active" href="#">Cari Konselor</a></li>
+            <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
+            <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+                <li class="nav-item"><a class="nav-link" href="jadwal_konsultasi.php">Jadwal Konsultasi</a></li>
+            <?php endif; ?>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
             
-        <?php else: ?>
-            <a href="signup.php" class="btn btn-primary">Daftar</a>
-            <a href="login.php" class="btn btn-outline-primary">Masuk</a>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+                
+            <?php else: ?>
+                <a href="signup.php" class="btn btn-primary">Daftar</a>
+                <a href="login.php" class="btn btn-outline-primary">Masuk</a>
+            <?php endif; ?>
 
-      </div>
-      
+        </div>
+        
+        </div>
     </div>
-  </div>
 </nav>
-<!-- END NAVBAR -->
 
+<!-- HEADER -->
 <header class="bg-primary text-white py-5 mb-5">
     <div class="container text-center">
         <h1 class="fw-bold display-5">Tim Konselor Kami</h1>
@@ -58,35 +58,31 @@ include 'koneksi.php';
     </div>
 </header>
 
+<!-- HALAMAN UTAMA -->
 <section class="py-5">
     <div class="container">
         
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
             <?php
-            // FILTER PENCARIAN
             $where = "u.role = 'konselor' AND u.status = 'active'";
             if (isset($_GET['q'])) {
                 $keyword = mysqli_real_escape_string($conn, $_GET['q']);
-                // Pencarian bisa berdasarkan nama (di tabel users) atau spesialisasi (di tabel konselor_profil)
                 $where .= " AND (u.nama LIKE '%$keyword%' OR kp.spesialisasi LIKE '%$keyword%')";
             }
 
-            // QUERY UTAMA (JOIN Tabel USERS & KONSELOR_PROFIL)
-            // Kita ambil semua kolom yang diperlukan untuk modal
             $query = "SELECT u.nama, u.user_id, 
-                             u.spesialisasi, kp.foto, kp.nomor_str, 
-                             kp.bahasa, kp.tentang_saya, kp.pendidikan, kp.metode_terapi
-                      FROM users u 
-                      LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id 
-                      WHERE $where 
-                      ORDER BY u.nama ASC";
+                            u.spesialisasi, kp.foto, kp.nomor_str, 
+                            kp.bahasa, kp.tentang_saya, kp.pendidikan, kp.metode_terapi
+                    FROM users u 
+                    LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id 
+                    WHERE $where 
+                    ORDER BY u.nama ASC";
 
             $result = mysqli_query($conn, $query);
 
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
                     
-                    // --- LOGIKA GAMBAR (Sama seperti index.php) ---
                     $foto_db = isset($row['foto']) ? $row['foto'] : '';
                     if (!empty($foto_db) && file_exists("img/" . $foto_db) && $foto_db != 'default.jpg') {
                         $gambar = "img/" . $foto_db . "?t=" . time(); 
@@ -94,7 +90,6 @@ include 'koneksi.php';
                         $gambar = "https://ui-avatars.com/api/?name=" . urlencode($row['nama']) . "&background=random&color=fff&size=400";
                     }
                     
-                    // Data Fallback (Agar tidak kosong di tampilan)
                     $spesialis  = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
                     $str        = !empty($row['nomor_str']) ? $row['nomor_str'] : '-';
                     $bahasa     = !empty($row['bahasa']) ? $row['bahasa'] : 'Indonesia';
@@ -106,7 +101,6 @@ include 'koneksi.php';
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-card">
                     
-                    <!-- Foto Profil -->
                     <div class="position-relative">
                         <img src="<?php echo $gambar; ?>" class="card-img-top" style="height: 250px; object-fit: cover;">
                     </div>
@@ -158,7 +152,7 @@ include 'koneksi.php';
                         <i class="bi bi-emoji-frown fs-1 d-block mb-3"></i>
                         <h4>Tidak ada konselor yang ditemukan.</h4>
                         <p>Coba kata kunci lain atau hapus filter pencarian.</p>
-                      </div>';
+                    </div>';
             }
             ?>
         </div>
@@ -166,6 +160,7 @@ include 'koneksi.php';
     </div>
 </section>
 
+<!-- FOOTER -->
 <footer class="bg-dark text-light py-4 mt-auto text-center">
     <div class="container">
         <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>

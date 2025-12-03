@@ -9,24 +9,20 @@ if (!isset($_SESSION['status']) || $_SESSION['role'] != 'konselor') {
 
 $user_id = $_SESSION['user_id'];
 
-
-
-
-// 2. LOGIC SIMPAN PROFIL
+// LOGIC SIMPAN PROFIL
 if (isset($_POST['simpan_profil'])) {
-    // Ambil data input
     $nama = mysqli_real_escape_string($conn, $_POST['nama']);
     $spesialisasi = mysqli_real_escape_string($conn, $_POST['spesialisasi']);
     $pendidikan = mysqli_real_escape_string($conn, $_POST['pendidikan']);
-    $str = mysqli_real_escape_string($conn, $_POST['str']); // Pastikan name di HTML adalah "str"
+    $str = mysqli_real_escape_string($conn, $_POST['str']); 
     $metode = mysqli_real_escape_string($conn, $_POST['metode']);
     $bahasa = mysqli_real_escape_string($conn, $_POST['bahasa']);
     $tentang = mysqli_real_escape_string($conn, $_POST['tentang']);
 
-    // --- PROSES GAMBAR (DILAKUKAN DI AWAL) ---
-    $foto_sql_update = ""; // Potongan query untuk UPDATE
-    $foto_col_insert = ""; // Potongan kolom untuk INSERT
-    $foto_val_insert = ""; // Potongan value untuk INSERT
+    // PROSES GAMBAR 
+    $foto_sql_update = ""; 
+    $foto_col_insert = ""; 
+    $foto_val_insert = ""; 
     
     if (!empty($_FILES['foto']['name'])) {
         $foto_name = $_FILES['foto']['name'];
@@ -35,43 +31,37 @@ if (isset($_POST['simpan_profil'])) {
         $foto_baru = "konselor_" . $user_id . "_" . time() . "." . $ext;
         $target_dir = "img/";
 
-        // Cek folder
         if (!file_exists($target_dir)) { mkdir($target_dir, 0777, true); }
 
         if (move_uploaded_file($foto_tmp, $target_dir . $foto_baru)) {
-            // Jika upload sukses, siapkan string SQL-nya
             $foto_sql_update = ", foto='$foto_baru'";
             $foto_col_insert = ", foto";
             $foto_val_insert = ", '$foto_baru'";
         }
     }
 
-    // --- CEK STATUS PENGAJUAN ---
+    // CEK STATUS PENGAJUAN 
     $cek_pending = mysqli_query($conn, "SELECT * FROM pengajuan_profil WHERE user_id='$user_id' AND status='Pending'");
     
     if (mysqli_num_rows($cek_pending) > 0) {
-        // SKENARIO UPDATE: Update data yang sudah ada (Pending)
-        // Perhatikan variabel $foto_sql_update dimasukkan ke sini
         $query = "UPDATE pengajuan_profil SET 
                   nama_baru='$nama', 
-                  spesialisasi_baru='$spesialisasi', 
-                  pendidikan_baru='$pendidikan', 
-                  str_baru='$str', 
-                  metode_baru='$metode', 
-                  bahasa_baru='$bahasa', 
-                  tentang_baru='$tentang' 
-                  $foto_sql_update 
-                  WHERE user_id='$user_id' AND status='Pending'";
+                spesialisasi_baru='$spesialisasi', 
+                pendidikan_baru='$pendidikan', 
+                str_baru='$str', 
+                metode_baru='$metode', 
+                bahasa_baru='$bahasa', 
+                tentang_baru='$tentang' 
+                $foto_sql_update 
+                WHERE user_id='$user_id' AND status='Pending'";
     } else {
-        // SKENARIO INSERT: Buat pengajuan baru
-        // Perhatikan variabel $foto_col_insert dan $foto_val_insert
         $query = "INSERT INTO pengajuan_profil 
-                  (user_id, nama_baru, spesialisasi_baru, pendidikan_baru, str_baru, metode_baru, bahasa_baru, tentang_baru $foto_col_insert)
-                  VALUES 
-                  ('$user_id', '$nama', '$spesialisasi', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang' $foto_val_insert)";
+                (user_id, nama_baru, spesialisasi_baru, pendidikan_baru, str_baru, metode_baru, bahasa_baru, tentang_baru $foto_col_insert)
+                VALUES 
+                ('$user_id', '$nama', '$spesialisasi', '$pendidikan', '$str', '$metode', '$bahasa', '$tentang' $foto_val_insert)";
     }
 
-    // --- EKSEKUSI QUERY ---
+    // EKSEKUSI QUERY
     if (mysqli_query($conn, $query)) {
         echo "<script>alert('Perubahan diajukan! Menunggu persetujuan Admin.'); window.location.href='profil_konselor.php';</script>";
     } else {
@@ -79,8 +69,7 @@ if (isset($_POST['simpan_profil'])) {
     }
 }
 
-
-
+// LOGIC TAMBAH JADWAL
 if (isset($_POST['tambah_jadwal'])) {
     $hari  = $_POST['hari'];
     $mulai = $_POST['jam_mulai']; 
@@ -88,8 +77,8 @@ if (isset($_POST['tambah_jadwal'])) {
     $harga = $_POST['harga']; 
 
     $q_ajukan = "INSERT INTO pengajuan_jadwal (user_id, hari, jam_mulai, jam_selesai, harga, status) 
-                 VALUES ('$user_id', '$hari', '$mulai', '$akhir', '$harga', 'Pending')";
-                 
+                VALUES ('$user_id', '$hari', '$mulai', '$akhir', '$harga', 'Pending')";
+                
     if(mysqli_query($conn, $q_ajukan)) {
         echo "<script>alert('Jadwal berhasil diajukan! Menunggu persetujuan Admin.'); window.location.href='profil_konselor.php';</script>";
     } else {
@@ -97,12 +86,14 @@ if (isset($_POST['tambah_jadwal'])) {
     }
 }
 
+// LOGIC HAPUS JADWAL
 if (isset($_GET['hapus_jadwal'])) {
     $id_jadwal = $_GET['hapus_jadwal'];
     mysqli_query($conn, "DELETE FROM jadwal_praktik WHERE id = '$id_jadwal' AND user_id = '$user_id'");
     echo "<script>alert('Jadwal dihapus.'); window.location.href='profil_konselor.php';</script>";
 }
 
+// LOGIC HAPUS PENGAJUAN
 if (isset($_GET['hapus_pengajuan'])) {
     $id_pengajuan = $_GET['hapus_pengajuan'];
     
@@ -132,31 +123,19 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
 </head>
 <body class="bg-light">
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-primary navbar-dark shadow-sm mb-4">
-  <div class="container">
-    <a class="navbar-brand fw-bold" href="profil_konselor.php"><i class="bi bi-hospital-fill me-2"></i>Panel Konselor</a>
-    <div class="d-flex gap-2">
-        <a href="index.php" class="btn btn-primary btn-sm text-white-50"><i class="bi bi-globe"></i> Web Utama</a>
-        <a href="jadwal_konsultasi.php" class="btn btn-outline-light btn-sm"><i class="bi bi-calendar-check me-1"></i> Lihat Pasien</a>
-        <a href="logout.php" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i></a>
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="profil_konselor.php"><i class="bi bi-hospital-fill me-2"></i>Panel Konselor</a>
+        <div class="d-flex gap-2">
+            <a href="index.php" class="btn btn-primary btn-sm text-white-50"><i class="bi bi-globe"></i> Web Utama</a>
+            <a href="jadwal_konsultasi.php" class="btn btn-outline-light btn-sm"><i class="bi bi-calendar-check me-1"></i> Lihat Pasien</a>
+            <a href="logout.php" class="btn btn-danger btn-sm"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
     </div>
-  </div>
 </nav>
 
-    <?php
-    // $xx_jadwal = mysqli_query($conn, "SELECT foto FROM konselor_profil WHERE user_id='$user_id'");
-    
-
-    // 2. CEK: Apakah datanya ada?
-    // if (mysqli_num_rows($xx_jadwal) > 0) {
-        
-    //     while ($j = mysqli_fetch_assoc($xx_jadwal)) {
-            
-    //         $foto_db = $j['foto'];
-    //     } 
-    // }
-    // ?>
-
+<!-- HALAMAN UTAMA -->
 <div class="container mb-5">
     <div class="row">
         <div class="col-md-4 mb-4">
@@ -208,7 +187,6 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                         </div>
 
                     <?php
-                    // Ambil status pengajuan terakhir
                     $q_status = mysqli_query($conn, "SELECT status, tanggal_request FROM pengajuan_profil WHERE user_id='$user_id' ORDER BY id DESC LIMIT 1");
                     $row_status = mysqli_fetch_assoc($q_status);
 
@@ -250,7 +228,7 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                     }
                     ?>  
 
-<div class="tab-pane fade" id="jadwal-pane">
+                        <div class="tab-pane fade" id="jadwal-pane">
                             
                             <div class="bg-light p-3 rounded mb-4 border">
                                 <h6 class="fw-bold mb-3">Ajukan Jadwal Baru</h6>
@@ -327,9 +305,9 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                                             
                                             <td class="text-center">
                                                 <a href="profil_konselor.php?hapus_pengajuan=<?php echo $aj['id']; ?>" 
-                                                   class="btn btn-outline-secondary btn-sm py-0 px-2"
-                                                   onclick="return confirm('Hapus catatan riwayat ini? (Jadwal aktif tidak akan terhapus)')"
-                                                   title="Bersihkan Riwayat">
+                                                    class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                                    onclick="return confirm('Hapus catatan riwayat ini? (Jadwal aktif tidak akan terhapus)')"
+                                                    title="Bersihkan Riwayat">
                                                     <i class="bi bi-x-lg"></i>
                                                 </a>
                                             </td>
@@ -361,8 +339,8 @@ $res_jadwal = mysqli_query($conn, $q_jadwal);
                                                 <td>Rp <?php echo number_format($jadwal['harga'], 0, ',', '.'); ?></td>
                                                 <td class="text-center">
                                                     <a href="profil_konselor.php?hapus_jadwal=<?php echo $jadwal['id']; ?>" 
-                                                       class="btn btn-danger btn-sm py-0"
-                                                       onclick="return confirm('Hapus jadwal ini?')">
+                                                        class="btn btn-danger btn-sm py-0"
+                                                        onclick="return confirm('Hapus jadwal ini?')">
                                                         <i class="bi bi-trash"></i>
                                                     </a>
                                                 </td>

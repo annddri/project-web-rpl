@@ -30,13 +30,13 @@ $role = 'pasien';
 $nama = $username;
 
 $query = "INSERT INTO users (user_id, nama, username, email, password, role, status) 
-          VALUES ('$user_id', '$nama', '$username', '$email', '$hashed_password', '$role', 'active')";
+        VALUES ('$user_id', '$nama', '$username', '$email', '$hashed_password', '$role', 'active')";
 
 if (mysqli_query($conn, $query)) {
     echo "<script>
             alert('Pendaftaran Berhasil! Silakan login.');
             window.location.href = 'login.php';
-          </script>";
+        </script>";
 } else {
     echo "Error: " . mysqli_error($conn);
 }

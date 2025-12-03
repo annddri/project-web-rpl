@@ -32,40 +32,40 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
-  <div class="container">
-    
-    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link" href="konselor.php">Cari Konselor</a></li>
-        <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
-        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
-            <li class="nav-item"><a class="nav-link active" href="#">Jadwal Konsultasi</a></li>
-        <?php endif; ?>
-      </ul>
-
-      <div class="d-flex align-items-center gap-3">
+    <div class="container">
         
-        <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+        <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="konselor.php">Cari Konselor</a></li>
+            <li class="nav-item"><a class="nav-link" href="artikel.php">Pusat Edukasi</a></li>
+            <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+                <li class="nav-item"><a class="nav-link active" href="#">Jadwal Konsultasi</a></li>
+            <?php endif; ?>
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
             
-        <?php else: ?>
-            <a href="signup.php" class="btn btn-primary">Daftar</a>
-            <a href="login.php" class="btn btn-outline-primary">Masuk</a>
-        <?php endif; ?>
+            <?php if (isset($_SESSION['status']) && $_SESSION['status'] == 'login'): ?>
+                
+            <?php else: ?>
+                <a href="signup.php" class="btn btn-primary">Daftar</a>
+                <a href="login.php" class="btn btn-outline-primary">Masuk</a>
+            <?php endif; ?>
 
-      </div>
-      
+        </div>
+        
+        </div>
     </div>
-  </div>
 </nav>
-<!-- END NAVBAR -->
 
+<!-- HALAMAN UTAMA -->
 <div class="container py-5">
     <div class="row mb-4">
         <div class="col">
@@ -82,15 +82,15 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
             <?php
             if ($role == 'konselor') {
                 $query = "SELECT k.*, 
-                                 u.nama AS nama_pasien, 
-                                 u.email, 
-                                 u.jenis_kelamin, 
-                                 u.tanggal_lahir, 
-                                 u.alamat
-                          FROM konsultasi k 
-                          JOIN users u ON k.user_id = u.user_id 
-                          WHERE k.konselor_nama = '$nama_user' 
-                          ORDER BY k.id DESC";
+                                u.nama AS nama_pasien, 
+                                u.email, 
+                                u.jenis_kelamin, 
+                                u.tanggal_lahir, 
+                                u.alamat
+                        FROM konsultasi k 
+                        JOIN users u ON k.user_id = u.user_id 
+                        WHERE k.konselor_nama = '$nama_user' 
+                        ORDER BY k.id DESC";
             } else {
                 $query = "SELECT * FROM konsultasi WHERE user_id = '$user_id' ORDER BY id DESC";
             }
@@ -223,6 +223,7 @@ if ($role == 'konselor' && isset($_GET['aksi']) && $_GET['aksi'] == 'selesai' &&
     </div>
 </div>
 
+<!-- FOOTER -->
 <footer class="bg-dark text-light py-4 mt-auto text-center">
     <div class="container">
         <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>

@@ -51,9 +51,9 @@
                     </div>
 
                     <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username']); ?>&background=0D6EFD&color=fff" 
-                         alt="Profil" 
-                         class="rounded-circle border border-2 border-white shadow-sm"
-                         width="40" height="40">
+                        alt="Profil" 
+                        class="rounded-circle border border-2 border-white shadow-sm"
+                        width="40" height="40">
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser">
@@ -87,7 +87,6 @@
     </div>
   </div>
 </nav>
-<!-- END NAVBAR -->
 
 <!-- CAROUSEL -->
 <div id="carouselExampleIndicators" class="carousel slide carousel-fixed-height" data-bs-ride="carousel">
@@ -116,7 +115,6 @@
     <span class="visually-hidden">Next</span>
   </button>
 </div>
-<!-- END CAROUSEL -->
 
 <!-- SECTION KONSELOR -->
 <section class="py-5 bg-light">
@@ -130,34 +128,27 @@
         
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
             <?php 
-            // QUERY MENGAMBIL DATA DARI TABEL USERS DAN KONSELOR_PROFIL
-            // Pastikan kolom 'foto' diambil dari kp.foto
             $query_home = "SELECT u.nama, u.user_id, 
                                   u.spesialisasi, kp.foto, kp.nomor_str, 
                                   kp.bahasa, kp.tentang_saya, kp.pendidikan, kp.metode_terapi
-                           FROM users u
-                           LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id
-                           WHERE u.role = 'konselor' AND u.status = 'active'
-                           LIMIT 4"; 
+                          FROM users u
+                          LEFT JOIN konselor_profil kp ON u.user_id = kp.user_id
+                          WHERE u.role = 'konselor' AND u.status = 'active'
+                          LIMIT 4"; 
 
             $result_home = mysqli_query($conn, $query_home);
 
             if ($result_home && mysqli_num_rows($result_home) > 0) {
                 while ($row = mysqli_fetch_assoc($result_home)) {
                     
-                    // --- LOGIKA GAMBAR OTOMATIS ---
                     $foto_db = isset($row['foto']) ? $row['foto'] : '';
                     
-                    // Cek apakah file fisik ada di folder img/
                     if (!empty($foto_db) && file_exists("img/" . $foto_db) && $foto_db != 'default.jpg') {
-                        // Jika ada, pakai foto upload (tambah time() agar refresh)
                         $gambar = "img/" . $foto_db . "?t=" . time(); 
                     } else {
-                        // Jika tidak ada, pakai avatar default (UI Avatars)
                         $gambar = "https://ui-avatars.com/api/?name=" . urlencode($row['nama']) . "&background=random&color=fff&size=400";
                     }
                     
-                    // Siapkan data lain (untuk modal)
                     $spesialis  = !empty($row['spesialisasi']) ? $row['spesialisasi'] : 'Psikolog Umum';
                     $str        = !empty($row['nomor_str']) ? $row['nomor_str'] : '-';
                     $bahasa     = !empty($row['bahasa']) ? $row['bahasa'] : 'Indonesia';
@@ -166,10 +157,8 @@
                     $metode     = !empty($row['metode_terapi']) ? $row['metode_terapi'] : '-';
             ?>
             
-            <!-- ITEM KARTU KONSELOR -->
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-card">
-                    <!-- Gambar Konselor -->
                     <img src="<?php echo $gambar; ?>" class="card-img-top" style="height: 250px; object-fit: cover;" alt="<?php echo $row['nama']; ?>">
                     
                     <div class="card-body d-flex flex-column">
@@ -181,7 +170,7 @@
                         ?>
 
                         <div class="mt-auto d-flex gap-2">
-                            <!-- TOMBOL DETAIL (Membuka Modal Profil) -->
+                            <!-- TOMBOL DETAIL -->
                             <button type="button" class="btn btn-outline-primary <?php echo $is_konselor ? 'w-100' : 'w-50'; ?>"
                                 data-bs-toggle="modal" 
                                 data-bs-target="#modalProfil"
@@ -213,7 +202,7 @@
             </div>
 
             <?php 
-                } // End While
+                } 
             } else {
                 echo '<div class="col-12 text-center py-5 text-muted">Belum ada konselor yang tersedia saat ini.</div>';
             }
@@ -221,13 +210,13 @@
         </div>
 
         <div class="row mt-5">
-      <div class="col text-center">
-        <p class="mb-3 text-muted">Belum menemukan spesialis yang cocok?</p>
-        <a href="konselor.php" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
-          Lihat Daftar Lengkap Konselor <i class="bi bi-arrow-right ms-2"></i>
-        </a>
-      </div>
-    </div>
+            <div class="col text-center">
+                <p class="mb-3 text-muted">Belum menemukan spesialis yang cocok?</p>
+                <a href="konselor.php" class="btn btn-outline-primary btn-lg px-5 rounded-pill shadow-sm">
+                    Lihat Daftar Lengkap Konselor <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -248,7 +237,6 @@
         </div>
 
         <div class="row g-4">
-            
             <?php
             if(isset($conn)){
                 $q_edu_home = mysqli_query($conn, "SELECT * FROM edukasi ORDER BY id DESC LIMIT 3");
@@ -263,7 +251,6 @@
                         
                         $deskripsi = substr(strip_tags($edu['isi_konten']), 0, 90) . '...';
             ?>
-
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 shadow-sm hover-card overflow-hidden">
                         <div class="position-relative">
@@ -294,7 +281,6 @@
                         </div>
                     </div>
                 </div>
-
             <?php 
                     }
                 } else {
@@ -302,7 +288,6 @@
                 }
             }
             ?>
-
         </div>
     </div>
 </section>
@@ -336,7 +321,6 @@
         </div>
     </div>
 </section>
-
 
 <!-- FOOTER -->
 <footer class="bg-dark text-light pt-5 pb-4 mt-auto">

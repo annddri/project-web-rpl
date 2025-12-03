@@ -26,15 +26,17 @@ if (!$data) {
 </head>
 <body>
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-white sticky-top shadow-sm">
-  <div class="container">
-    <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
-    <div class="ms-auto">
-        <a href="artikel.php" class="btn btn-outline-secondary btn-sm">Kembali ke Daftar</a>
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="index.php">Stark Hope</a>
+        <div class="ms-auto">
+            <a href="artikel.php" class="btn btn-outline-secondary btn-sm">Kembali ke Daftar</a>
+        </div>
     </div>
-  </div>
 </nav>
 
+<!-- HEADER -->
 <header class="position-relative" style="height: 400px; overflow: hidden;">
     <img src="<?php echo $data['gambar_url']; ?>" class="w-100 h-100" style="object-fit: cover; filter: brightness(0.4);" alt="Cover">
     <div class="position-absolute top-50 start-50 translate-middle text-center text-white w-75">
@@ -47,6 +49,7 @@ if (!$data) {
     </div>
 </header>
 
+<!-- HALAMAN UTAMA -->
 <div class="container my-5">
     <div class="row justify-content-center">
         
@@ -88,6 +91,7 @@ if (!$data) {
     </div>
 </div>
 
+<!-- FOOTER -->
 <footer class="bg-dark text-light py-4 mt-auto text-center">
     <div class="container">
         <p class="small text-white-50 mb-0">&copy; 2025 Stark Hope Indonesia.</p>
